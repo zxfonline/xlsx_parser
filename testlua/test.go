@@ -62,6 +62,8 @@ type Test struct {
 	/*第一行是每个字段的注释*/
 	Structs []Struct
 	/*第一行是每个字段的注释*/
+	Structss [][]Struct
+	/*第一行是每个字段的注释*/
 	Map_String_Struct map[string]Struct
 	/*第一行是每个字段的注释*/
 	Map_Int_Struct map[int]Struct

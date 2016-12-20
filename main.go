@@ -102,6 +102,8 @@ var (
 	ARRAYS_TOKEN_END = "]"
 
 	INDENT = "\t"
+
+	MAINKEY_INDEX = 0
 )
 
 var (
@@ -112,7 +114,43 @@ var (
 	//map[key]value key=基础数据类型 value=基础数据类型 、 基础数据类型 一维数组 、 基础数据类型 二维数组 eg:map[int]int、map[int][]int、map[int][][]int
 	baseMapReg = regexp.MustCompile(`^\s{0,}map\s{0,}\[\s{0,}(int8|int16|int32|int64|int|float32|float64|string|bool)\s{0,}\]\s{0,}(\[\s{0,}\]\s{0,}){0,2}\s{0,1}(int8|int16|int32|int64|int|float32|float64|string|bool)\s{0,}$`)
 	//结构体、 []结构体、[][]结构体、map[基础数据类型]结构体、map[基础数据类型][]结构体、map[基础数据类型][][]结构体
-	objMapArrayReg = regexp.MustCompile(`^(\s{0,}map\s{0,}\[\s{0,}(int8|int16|int32|int64|int|float32|float64|string|bool)\s{0,}\]){0,1}\s{0,}(\[\s{0,}\]\s{0,}){0,2}\s{0,1}[a-zA-Z0-9_]{1,}\s{0,}$`)
+	objMapReg       = regexp.MustCompile(`^(\s{0,}map\s{0,}\[\s{0,}(int8|int16|int32|int64|int|float32|float64|string|bool)\s{0,}\]){0,1}\s{0,}(\[\s{0,}\]\s{0,}){0,2}\s{0,1}[a-zA-Z0-9_]{1,}\s{0,}$`)
+	objMapArrayReg  = regexp.MustCompile(`^(\s{0,}map\s{0,}\[\s{0,}(int8|int16|int32|int64|int|float32|float64|string|bool)\s{0,}\]){1}\s{0,}(\[\s{0,}\]\s{0,}){1}\s{0,1}[a-zA-Z0-9_]{1,}\s{0,}$`)
+	objMapArray2Reg = regexp.MustCompile(`^(\s{0,}map\s{0,}\[\s{0,}(int8|int16|int32|int64|int|float32|float64|string|bool)\s{0,}\]){1}\s{0,}(\[\s{0,}\]\s{0,}){2}\s{0,1}[a-zA-Z0-9_]{1,}\s{0,}$`)
+
+	//map[(int8|int16|int32|int64|int)]结构体
+	numKVObjMapReg = regexp.MustCompile(`^(\s{0,}map\s{0,}\[\s{0,}(int8|int16|int32|int64|int)\s{0,}\]){1}\s{0,}\s{0,1}[a-zA-Z0-9_]{1,}\s{0,}$`)
+	//map[(int8|int16|int32|int64|int)][]结构体
+	numKVObjArrayMapReg = regexp.MustCompile(`^(\s{0,}map\s{0,}\[\s{0,}(int8|int16|int32|int64|int)\s{0,}\]){1}\s{0,}(\[\s{0,}\]\s{0,}){1}\s{0,1}[a-zA-Z0-9_]{1,}\s{0,}$`)
+	//map[(int8|int16|int32|int64|int)][][]结构体
+	numKVObj2ArrayMapReg = regexp.MustCompile(`^(\s{0,}map\s{0,}\[\s{0,}(int8|int16|int32|int64|int)\s{0,}\]){1}\s{0,}(\[\s{0,}\]\s{0,}){2}\s{0,1}[a-zA-Z0-9_]{1,}\s{0,}$`)
+
+	//map[(float32|float64)]结构体
+	floatKVObjMapReg = regexp.MustCompile(`^(\s{0,}map\s{0,}\[\s{0,}(float32|float64)\s{0,}\]){1}\s{0,}\s{0,1}[a-zA-Z0-9_]{1,}\s{0,}$`)
+	//map[(float32|float64)][]结构体
+	floatKVObjArrayMapReg = regexp.MustCompile(`^(\s{0,}map\s{0,}\[\s{0,}(float32|float64)\s{0,}\]){1}\s{0,}(\[\s{0,}\]\s{0,}){1}\s{0,1}[a-zA-Z0-9_]{1,}\s{0,}$`)
+	//map[(float32|float64)][][]结构体
+	floatKVObj2ArrayMapReg = regexp.MustCompile(`^(\s{0,}map\s{0,}\[\s{0,}(float32|float64)\s{0,}\]){1}\s{0,}(\[\s{0,}\]\s{0,}){2}\s{0,1}[a-zA-Z0-9_]{1,}\s{0,}$`)
+
+	//map[(bool)]结构体
+	boolKVObjMapReg = regexp.MustCompile(`^(\s{0,}map\s{0,}\[\s{0,}(bool)\s{0,}\]){1}\s{0,}\s{0,1}[a-zA-Z0-9_]{1,}\s{0,}$`)
+	//map[(bool)][]结构体
+	boolKVObjArrayMapReg = regexp.MustCompile(`^(\s{0,}map\s{0,}\[\s{0,}(bool)\s{0,}\]){1}\s{0,}(\[\s{0,}\]\s{0,}){1}\s{0,1}[a-zA-Z0-9_]{1,}\s{0,}$`)
+	//map[(bool)][][]结构体
+	boolKVObj2ArrayMapReg = regexp.MustCompile(`^(\s{0,}map\s{0,}\[\s{0,}(bool)\s{0,}\]){1}\s{0,}(\[\s{0,}\]\s{0,}){2}\s{0,1}[a-zA-Z0-9_]{1,}\s{0,}$`)
+
+	//map[string]结构体
+	strKVObjMapReg = regexp.MustCompile(`^(\s{0,}map\s{0,}\[\s{0,}(string)\s{0,}\]){1}\s{0,}\s{0,1}[a-zA-Z0-9_]{1,}\s{0,}$`)
+	//map[string][]结构体
+	strKVObjArrayMapReg = regexp.MustCompile(`^(\s{0,}map\s{0,}\[\s{0,}(string)\s{0,}\]){1}\s{0,}(\[\s{0,}\]\s{0,}){1}\s{0,1}[a-zA-Z0-9_]{1,}\s{0,}$`)
+	//map[string][][]结构体
+	strKVObj2ArrayMapReg = regexp.MustCompile(`^(\s{0,}map\s{0,}\[\s{0,}(string)\s{0,}\]){1}\s{0,}(\[\s{0,}\]\s{0,}){2}\s{0,1}[a-zA-Z0-9_]{1,}\s{0,}$`)
+	//[]结构体
+	objArrayMapReg = regexp.MustCompile(`^\s{0,}(\[\s{0,}\]\s{0,}){1}\s{0,1}[a-zA-Z0-9_]{1,}\s{0,}$`)
+	//[][]结构体
+	obj2ArrayMapReg = regexp.MustCompile(`^\s{0,}(\[\s{0,}\]\s{0,}){2}\s{0,1}[a-zA-Z0-9_]{1,}\s{0,}$`)
+	//结构体
+	objReg = regexp.MustCompile(`^\s{0,}[a-zA-Z0-9_]{1,}\s{0,}$`)
 
 	//lua 基础数据类型
 	//number int
@@ -207,9 +245,6 @@ var (
 	baseKStrV2BoolMapReg  = regexp.MustCompile(`^\s{0,}map\s{0,}\[\s{0,}(string)\s{0,}\]\s{0,}(\[\s{0,}\]\s{0,}){2}\s{0,1}(bool)\s{0,}$`)
 	baseKStrV2StrMapReg   = regexp.MustCompile(`^\s{0,}map\s{0,}\[\s{0,}(string)\s{0,}\]\s{0,}(\[\s{0,}\]\s{0,}){2}\s{0,1}(string)\s{0,}$`)
 
-	//主键数据内容匹配类型
-	mainKeyReg = regexp.MustCompile(`^\s{0,}[a-zA-Z_][a-zA-Z0-9_]{0,}\s{0,}$`)
-
 	//二维数组数据匹配表达式
 	arraysValueRegStr    = `^[^\token_begin\token_end]{0,}\token_begin[^\token_begin\token_end]{0,}\token_end[^\token_begin\token_end]{0,}(\array_sep[^\token_begin\token_end]{0,}\token_begin[^\token_begin\token_end]{0,}\token_end[^\token_begin\token_end]{0,}){0,}$`
 	arraysSonValueRegStr = `\token_begin[^\token_begin\token_end]{0,}\token_end`
@@ -233,7 +268,7 @@ var (
 var opts Options
 var parser = flags.NewParser(&opts, flags.Default)
 
-func initGlobal() {
+func init() {
 	if args, err := parser.Parse(); err != nil {
 		if flagsErr, ok := err.(*flags.Error); ok && flagsErr.Type == flags.ErrHelp {
 			os.Exit(0)
@@ -325,8 +360,6 @@ func initGlobal() {
 }
 
 func main() {
-	initGlobal()
-
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
 	go func() {
@@ -417,14 +450,14 @@ func main() {
 	}
 
 	for pathfile, sheetNames := range opts.Excels.List {
+		pathfile = strings.Replace(filepath.Clean(pathfile), "\\", "/", -1)
+		xlsxFile, err := xlsx.OpenFile(pathfile)
+		if err != nil {
+			panic(err)
+		}
 		wg.Add(1)
-		go func(pathfile string, sheetNames []string) {
+		go func(xlsxFile *xlsx.File, sheetNames []string) {
 			defer wg.Done()
-			pathfile = strings.Replace(filepath.Clean(pathfile), "\\", "/", -1)
-			xlsxFile, err := xlsx.OpenFile(pathfile)
-			if err != nil {
-				panic(err)
-			}
 			for _, sheetName := range sheetNames {
 				file_path := path.Join(opts.OutluaPath, fmt.Sprintf("sample_%s.lua", sheetName))
 				wclua, err := openFile(file_path)
@@ -454,7 +487,7 @@ func main() {
 				//			fmt.Printf("%+v\n", repr.Repr(head, repr.Indent("\t")))
 				printerlua("\n}\n")
 			}
-		}(pathfile, sheetNames)
+		}(xlsxFile, sheetNames)
 	}
 
 	wg.Wait()
@@ -504,7 +537,7 @@ func generateLuaDescFromXLSXFile(xlsxFile *xlsx.File, sheetName string, outputf 
 			outputf(fmt.Sprintf(`%sP_%s:%s`, fmt.Sprintf("\n%s", indent), att_name, att_desc))
 		} else if baseMapReg.MatchString(att_type) {
 			outputf(fmt.Sprintf(`%sP_%s:%s`, fmt.Sprintf("\n%s", indent), att_name, att_desc))
-		} else if objMapArrayReg.MatchString(att_type) {
+		} else if objMapReg.MatchString(att_type) {
 			son_sheetName := att_type
 			if idx := strings.LastIndex(att_type, "]"); idx != -1 {
 				son_sheetName = strings.TrimSpace(att_type[idx+1:])
@@ -530,6 +563,22 @@ type rowhead struct {
 	head map[int]*rowcol
 }
 
+func getRowIndex(sheet_root *xlsx.Sheet, sheetName, value string, col int) (int, *xlsx.Row, error) {
+	for rowIdx, row := range sheet_root.Rows {
+		if rowIdx < 3 {
+			continue
+		}
+		mkvalue, err := row.Cells[col].String()
+		if err != nil {
+			return -1, nil, fmt.Errorf("get row index err:%v,sheet:%v,col:%v,value:%v", err, sheetName, col, value)
+		}
+		mkvalue = strings.TrimSpace(mkvalue)
+		if mkvalue == value {
+			return rowIdx, row, nil
+		}
+	}
+	return -1, nil, fmt.Errorf("get row index err:no found field,sheet:%v,col:%v,value:%v", sheetName, col, value)
+}
 func generateLuaHeadFromXLSXFile(xlsxFile *xlsx.File, sheetName string, outputf func(s string), indent string) *rowhead {
 	sheet_root, ok := xlsxFile.Sheet[sheetName]
 	if ok == false {
@@ -572,10 +621,2096 @@ func generateLuaHeadFromXLSXFile(xlsxFile *xlsx.File, sheetName string, outputf 
 			if idx := strings.LastIndex(att_type, "]"); idx != -1 {
 				son_sheetName = strings.TrimSpace(att_type[idx+1:])
 			}
+			rc.son = generateLuaHeadFromXLSXFile(xlsxFile, son_sheetName, outputf, fmt.Sprintf("%s%s%s", rc.indent, INDENT, INDENT))
+		} else if objMapArray2Reg.MatchString(att_type) {
+			son_sheetName := att_type
+			if idx := strings.LastIndex(att_type, "]"); idx != -1 {
+				son_sheetName = strings.TrimSpace(att_type[idx+1:])
+			}
+			rc.son = generateLuaHeadFromXLSXFile(xlsxFile, son_sheetName, outputf, fmt.Sprintf("%s%s%s%s", rc.indent, INDENT, INDENT, INDENT))
+		} else if obj2ArrayMapReg.MatchString(att_type) {
+			son_sheetName := att_type
+			if idx := strings.LastIndex(att_type, "]"); idx != -1 {
+				son_sheetName = strings.TrimSpace(att_type[idx+1:])
+			}
+			rc.son = generateLuaHeadFromXLSXFile(xlsxFile, son_sheetName, outputf, fmt.Sprintf("%s%s%s", rc.indent, INDENT, INDENT))
+		} else if objArrayMapReg.MatchString(att_type) {
+			son_sheetName := att_type
+			if idx := strings.LastIndex(att_type, "]"); idx != -1 {
+				son_sheetName = strings.TrimSpace(att_type[idx+1:])
+			}
+			rc.son = generateLuaHeadFromXLSXFile(xlsxFile, son_sheetName, outputf, fmt.Sprintf("%s%s", rc.indent, INDENT))
+		} else if objReg.MatchString(att_type) {
+			son_sheetName := att_type
+			if idx := strings.LastIndex(att_type, "]"); idx != -1 {
+				son_sheetName = strings.TrimSpace(att_type[idx+1:])
+			}
+			rc.son = generateLuaHeadFromXLSXFile(xlsxFile, son_sheetName, outputf, fmt.Sprintf("%s", rc.indent))
+		} else if objMapReg.MatchString(att_type) {
+			son_sheetName := att_type
+			if idx := strings.LastIndex(att_type, "]"); idx != -1 {
+				son_sheetName = strings.TrimSpace(att_type[idx+1:])
+			}
 			rc.son = generateLuaHeadFromXLSXFile(xlsxFile, son_sheetName, outputf, fmt.Sprintf("%s%s", rc.indent, INDENT))
 		}
 	}
 	return heads
+}
+
+func generateLuaContentFromXLSXRow(rowIdx int, row *xlsx.Row, heads *rowhead, outputf func(s string), xlsxFile *xlsx.File) {
+	for colIdx, cell := range row.Cells {
+		if colAttr, pre := heads.head[colIdx]; pre {
+			colAttr.row = rowIdx
+			att_value, err := cell.String()
+			if err != nil {
+				panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
+			}
+
+			if numIntReg.MatchString(colAttr.att_type) { //(int|int8|int16|int32|int64)
+				outputf(fmt.Sprintf("%sP_%s=%v,", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name, strutil.Stoi64(att_value)))
+			} else if numIntArrayReg.MatchString(colAttr.att_type) { //[](int|int8|int16|int32|int64)
+				if v, err := strutil.ParseInt64s(strings.Split(att_value, ARRAY_SEPARATOR)); err != nil {
+					panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
+				} else {
+					outputf(fmt.Sprintf("%sP_%s={%v},", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name, strings.Join(strutil.Int64sToStrs(v), ",")))
+				}
+			} else if num2IntArrayReg.MatchString(colAttr.att_type) { //[][](int|int8|int16|int32|int64)
+				if arraysValueReg.MatchString(att_value) {
+					att_values := arraysSonValueReg.FindAllString(att_value, -1)
+					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+					for i := 0; i < len(att_values); i++ {
+						value := strings.TrimSpace(att_values[i])
+						value = value[1 : len(value)-1]
+						if v, err := strutil.ParseInt64s(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
+							panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
+						} else {
+							outputf(fmt.Sprintf("{%v},", strings.Join(strutil.Int64sToStrs(v), ",")))
+						}
+					}
+					outputf("},")
+				} else {
+					panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+				}
+			} else if numFloatReg.MatchString(colAttr.att_type) { //(float64|float32)
+				outputf(fmt.Sprintf("%sP_%s=%v,", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name, strutil.Stof64(att_value)))
+			} else if numFloatArrayReg.MatchString(colAttr.att_type) { //[](float64|float32)
+				if v, err := strutil.ParseFloat64s(strings.Split(att_value, ARRAY_SEPARATOR)); err != nil {
+					panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
+				} else {
+					outputf(fmt.Sprintf("%sP_%s={%v},", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name, strings.Join(strutil.Float64sToStrs(v), ",")))
+				}
+			} else if num2FloatArrayReg.MatchString(colAttr.att_type) { //[][](float64|float32)
+				if arraysValueReg.MatchString(att_value) {
+					att_values := arraysSonValueReg.FindAllString(att_value, -1)
+					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+					for i := 0; i < len(att_values); i++ {
+						value := strings.TrimSpace(att_values[i])
+						value = value[1 : len(value)-1]
+						if v, err := strutil.ParseFloat64s(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
+							panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
+						} else {
+							outputf(fmt.Sprintf("{%v},", strings.Join(strutil.Float64sToStrs(v), ",")))
+						}
+					}
+					outputf("},")
+				} else {
+					panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+				}
+			} else if strReg.MatchString(colAttr.att_type) { //string
+				outputf(fmt.Sprintf("%sP_%s=[[%v]],", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name, att_value))
+			} else if strArrayReg.MatchString(colAttr.att_type) { //[]string
+				outputf(fmt.Sprintf("%sP_%s={[[%v]]},", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name, strings.Join(strings.Split(att_value, ARRAY_SEPARATOR), "]],[[")))
+			} else if str2ArrayReg.MatchString(colAttr.att_type) { //[][]string
+				if arraysValueReg.MatchString(att_value) {
+					att_values := arraysSonValueReg.FindAllString(att_value, -1)
+					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+					for i := 0; i < len(att_values); i++ {
+						value := strings.TrimSpace(att_values[i])
+						value = value[1 : len(value)-1]
+						outputf(fmt.Sprintf("{[[%v]]},", strings.Join(strings.Split(value, ARRAY_SEPARATOR), "]],[[")))
+					}
+					outputf("},")
+				} else {
+					panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+				}
+			} else if boolReg.MatchString(colAttr.att_type) { //bool
+				outputf(fmt.Sprintf("%sP_%s=%v,", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name, strutil.StoBol(att_value)))
+			} else if boolArrayReg.MatchString(colAttr.att_type) { //[]bool
+				if v, err := strutil.ParseBools(strings.Split(att_value, ARRAY_SEPARATOR)); err != nil {
+					panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
+				} else {
+					outputf(fmt.Sprintf("%sP_%s={%v},", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name, strings.Join(strutil.BoolsToStrs(v), ",")))
+				}
+			} else if bool2ArrayReg.MatchString(colAttr.att_type) { //[][]bool
+				if arraysValueReg.MatchString(att_value) {
+					att_values := arraysSonValueReg.FindAllString(att_value, -1)
+					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+					for i := 0; i < len(att_values); i++ {
+						value := strings.TrimSpace(att_values[i])
+						value = value[1 : len(value)-1]
+						if v, err := strutil.ParseBools(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
+							panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
+						} else {
+							outputf(fmt.Sprintf("{%v},", strings.Join(strutil.BoolsToStrs(v), ",")))
+						}
+					}
+					outputf("},")
+				} else {
+					panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+				}
+			} else if baseKNumVNumReg.MatchString(colAttr.att_type) { //map[(int|int8|int16|int32|int64)](int|int8|int16|int32|int64)
+				kvsm := strings.Split(att_value, ARRAY_SEPARATOR)
+				result := make(map[int64]int64)
+				outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+				var k, v int64
+				for _, kvs := range kvsm {
+					if strings.TrimSpace(kvs) == "" {
+						continue
+					}
+					kv := strings.Split(kvs, MAP_SEPARATOR)
+					if len(kv) != 2 {
+						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+					}
+					k = strutil.Stoi64(kv[0])
+					v = strutil.Stoi64(kv[1])
+					if _, pre := result[k]; pre {
+						panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+					}
+					result[k] = v
+					outputf(fmt.Sprintf(`%s["%v"]=%v,`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, v))
+				}
+				outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+			} else if baseKNumVNumMapReg.MatchString(colAttr.att_type) { //map[(int|int8|int16|int32|int64)][](int|int8|int16|int32|int64)
+				if mapArrayValueReg.MatchString(att_value) {
+					kvsm := mapArraySonValueReg.FindAllString(att_value, -1)
+					result := make(map[int64]bool)
+					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+					var k int64
+					for _, kvs := range kvsm {
+						kv := strings.Split(kvs, MAP_SEPARATOR)
+						if len(kv) != 2 {
+							//panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+							continue
+						}
+						k = strutil.Stoi64(kv[0])
+						if ex := result[k]; ex {
+							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+						}
+						result[k] = true
+						value := strings.TrimSpace(kv[1])
+						value = value[1 : len(value)-1]
+						if v, err := strutil.ParseInt64s(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
+							panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
+						} else {
+							outputf(fmt.Sprintf(`%s["%v"]={%v},`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, strings.Join(strutil.Int64sToStrs(v), ",")))
+						}
+					}
+					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+				} else {
+					panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+				}
+			} else if baseKNumV2NumMapReg.MatchString(colAttr.att_type) { //map[(int|int8|int16|int32|int64)][][](int|int8|int16|int32|int64)
+				if mapArraysValueReg.MatchString(att_value) {
+					kvsms := mapArraysSonValueReg.FindAllString(att_value, -1)
+					result := make(map[int64]bool)
+					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+					var k int64
+					for _, kvas := range kvsms {
+						kv := strings.Split(kvas, MAP_SEPARATOR)
+						if len(kv) != 2 {
+							//panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+							continue
+						}
+						k = strutil.Stoi64(kv[0])
+						if ex := result[k]; ex {
+							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+						}
+						result[k] = true
+						arrays := arraysSonValueReg.FindAllString(kv[1], -1)
+						outputf(fmt.Sprintf(`%s["%v"]={`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k))
+						for _, value := range arrays {
+							value = strings.TrimSpace(value)
+							value = value[1 : len(value)-1]
+							if v, err := strutil.ParseInt64s(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
+								panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
+							} else {
+								outputf(fmt.Sprintf("%s{%v},", fmt.Sprintf("\n%s%s%s", colAttr.indent, INDENT, INDENT), strings.Join(strutil.Int64sToStrs(v), ",")))
+							}
+						}
+						outputf(fmt.Sprintf("\n%s%s},", colAttr.indent, INDENT))
+					}
+					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+				} else {
+					panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+				}
+			} else if baseKNumVFloatReg.MatchString(colAttr.att_type) { //map[(int|int8|int16|int32|int64)](float64|float32)
+				kvsm := strings.Split(att_value, ARRAY_SEPARATOR)
+				result := make(map[int64]float64)
+				outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+				var k int64
+				var v float64
+				for _, kvs := range kvsm {
+					if strings.TrimSpace(kvs) == "" {
+						continue
+					}
+					kv := strings.Split(kvs, MAP_SEPARATOR)
+					if len(kv) != 2 {
+						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+					}
+					k = strutil.Stoi64(kv[0])
+					v = strutil.Stof64(kv[1])
+					if _, pre := result[k]; pre {
+						panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+					}
+					result[k] = v
+					outputf(fmt.Sprintf(`%s["%v"]=%v,`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, v))
+				}
+				outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+			} else if baseKNumVFloatMapReg.MatchString(colAttr.att_type) { //map[(int|int8|int16|int32|int64)][](float64|float32)
+				if mapArrayValueReg.MatchString(att_value) {
+					kvsm := mapArraySonValueReg.FindAllString(att_value, -1)
+					result := make(map[int64]bool)
+					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+					var k int64
+					for _, kvs := range kvsm {
+						kv := strings.Split(kvs, MAP_SEPARATOR)
+						if len(kv) != 2 {
+							//							panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+							continue
+						}
+						k = strutil.Stoi64(kv[0])
+						if ex := result[k]; ex {
+							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+						}
+						result[k] = true
+						value := strings.TrimSpace(kv[1])
+						value = value[1 : len(value)-1]
+						if v, err := strutil.ParseFloat64s(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
+							panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
+						} else {
+							outputf(fmt.Sprintf(`%s["%v"]={%v},`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, strings.Join(strutil.Float64sToStrs(v), ",")))
+						}
+					}
+					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+				} else {
+					panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+				}
+			} else if baseKNumV2FloatMapReg.MatchString(colAttr.att_type) { //map[(int|int8|int16|int32|int64)][][](float64|float32)
+				if mapArraysValueReg.MatchString(att_value) {
+					kvsms := mapArraysSonValueReg.FindAllString(att_value, -1)
+					result := make(map[int64]bool)
+					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+					var k int64
+					for _, kvas := range kvsms {
+						kv := strings.Split(kvas, MAP_SEPARATOR)
+						if len(kv) != 2 {
+							//panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+							continue
+						}
+						k = strutil.Stoi64(kv[0])
+						if ex := result[k]; ex {
+							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+						}
+						result[k] = true
+						arrays := arraysSonValueReg.FindAllString(kv[1], -1)
+						outputf(fmt.Sprintf(`%s["%v"]={`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k))
+						for _, value := range arrays {
+							value = strings.TrimSpace(value)
+							value = value[1 : len(value)-1]
+							if v, err := strutil.ParseFloat64s(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
+								panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
+							} else {
+								outputf(fmt.Sprintf("%s{%v},", fmt.Sprintf("\n%s%s%s", colAttr.indent, INDENT, INDENT), strings.Join(strutil.Float64sToStrs(v), ",")))
+							}
+						}
+						outputf(fmt.Sprintf("\n%s%s},", colAttr.indent, INDENT))
+					}
+					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+				} else {
+					panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+				}
+			} else if baseKNumVBoolReg.MatchString(colAttr.att_type) { //map[(int|int8|int16|int32|int64)]bool
+				kvsm := strings.Split(att_value, ARRAY_SEPARATOR)
+				result := make(map[int64]bool)
+				outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+				var k int64
+				var v bool
+				for _, kvs := range kvsm {
+					if strings.TrimSpace(kvs) == "" {
+						continue
+					}
+					kv := strings.Split(kvs, MAP_SEPARATOR)
+					if len(kv) != 2 {
+						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+					}
+					k = strutil.Stoi64(kv[0])
+					v = strutil.StoBol(kv[1])
+					if _, pre := result[k]; pre {
+						panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+					}
+					result[k] = v
+					outputf(fmt.Sprintf(`%s["%v"]=%v,`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, v))
+				}
+				outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+			} else if baseKNumVBoolMapReg.MatchString(colAttr.att_type) { //map[(int|int8|int16|int32|int64)][]bool
+				if mapArrayValueReg.MatchString(att_value) {
+					kvsm := mapArraySonValueReg.FindAllString(att_value, -1)
+					result := make(map[int64]bool)
+					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+					var k int64
+					for _, kvs := range kvsm {
+						kv := strings.Split(kvs, MAP_SEPARATOR)
+						if len(kv) != 2 {
+							//							panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+							continue
+						}
+						k = strutil.Stoi64(kv[0])
+						if ex := result[k]; ex {
+							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+						}
+						result[k] = true
+						value := strings.TrimSpace(kv[1])
+						value = value[1 : len(value)-1]
+						if v, err := strutil.ParseBools(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
+							panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
+						} else {
+							outputf(fmt.Sprintf(`%s["%v"]={%v},`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, strings.Join(strutil.BoolsToStrs(v), ",")))
+						}
+					}
+					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+				} else {
+					panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+				}
+			} else if baseKNumV2BoolMapReg.MatchString(colAttr.att_type) { //map[(int|int8|int16|int32|int64)][][]bool
+				if mapArraysValueReg.MatchString(att_value) {
+					kvsms := mapArraysSonValueReg.FindAllString(att_value, -1)
+					result := make(map[int64]bool)
+					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+					var k int64
+					for _, kvas := range kvsms {
+						kv := strings.Split(kvas, MAP_SEPARATOR)
+						if len(kv) != 2 {
+							//panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+							continue
+						}
+						k = strutil.Stoi64(kv[0])
+						if ex := result[k]; ex {
+							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+						}
+						result[k] = true
+						arrays := arraysSonValueReg.FindAllString(kv[1], -1)
+						outputf(fmt.Sprintf(`%s["%v"]={`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k))
+						for _, value := range arrays {
+							value = strings.TrimSpace(value)
+							value = value[1 : len(value)-1]
+							if v, err := strutil.ParseBools(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
+								panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
+							} else {
+								outputf(fmt.Sprintf("%s{%v},", fmt.Sprintf("\n%s%s%s", colAttr.indent, INDENT, INDENT), strings.Join(strutil.BoolsToStrs(v), ",")))
+							}
+						}
+						outputf(fmt.Sprintf("\n%s%s},", colAttr.indent, INDENT))
+					}
+					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+				} else {
+					panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+				}
+			} else if baseKNumVStrReg.MatchString(colAttr.att_type) { //map[(int|int8|int16|int32|int64)]string
+				kvsm := strings.Split(att_value, ARRAY_SEPARATOR)
+				result := make(map[int64]string)
+				outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+				var k int64
+				var v string
+				for _, kvs := range kvsm {
+					if strings.TrimSpace(kvs) == "" {
+						continue
+					}
+					kv := strings.Split(kvs, MAP_SEPARATOR)
+					if len(kv) != 2 {
+						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+					}
+					k = strutil.Stoi64(kv[0])
+					v = strings.TrimSpace(kv[1])
+					if _, pre := result[k]; pre {
+						panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+					}
+					result[k] = v
+					outputf(fmt.Sprintf(`%s["%v"]=[[%v]],`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, v))
+				}
+				outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+			} else if baseKNumVStrMapReg.MatchString(colAttr.att_type) { //map[(int|int8|int16|int32|int64)][]string
+				if mapArrayValueReg.MatchString(att_value) {
+					kvsm := mapArraySonValueReg.FindAllString(att_value, -1)
+					result := make(map[int64]bool)
+					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+					var k int64
+					for _, kvs := range kvsm {
+						kv := strings.Split(kvs, MAP_SEPARATOR)
+						if len(kv) != 2 {
+							//							panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+							continue
+						}
+						k = strutil.Stoi64(kv[0])
+						if ex := result[k]; ex {
+							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+						}
+						result[k] = true
+						value := strings.TrimSpace(kv[1])
+						value = value[1 : len(value)-1]
+						outputf(fmt.Sprintf(`%s["%v"]={[[%v]]},`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, strings.Join(strings.Split(value, ARRAY_SEPARATOR), "]],[[")))
+					}
+					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+				} else {
+					panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+				}
+			} else if baseKNumV2StrMapReg.MatchString(colAttr.att_type) { //map[(int|int8|int16|int32|int64)][][]string
+				if mapArraysValueReg.MatchString(att_value) {
+					kvsms := mapArraysSonValueReg.FindAllString(att_value, -1)
+					result := make(map[int64]bool)
+					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+					var k int64
+					for _, kvas := range kvsms {
+						kv := strings.Split(kvas, MAP_SEPARATOR)
+						if len(kv) != 2 {
+							//panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+							continue
+						}
+						k = strutil.Stoi64(kv[0])
+						if ex := result[k]; ex {
+							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+						}
+						result[k] = true
+						arrays := arraysSonValueReg.FindAllString(kv[1], -1)
+						outputf(fmt.Sprintf(`%s["%v"]={`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k))
+						for _, value := range arrays {
+							value = strings.TrimSpace(value)
+							value = value[1 : len(value)-1]
+							outputf(fmt.Sprintf("%s{[[%v]]},", fmt.Sprintf("\n%s%s%s", colAttr.indent, INDENT, INDENT), strings.Join(strings.Split(value, ARRAY_SEPARATOR), "]],[[")))
+						}
+						outputf(fmt.Sprintf("\n%s%s},", colAttr.indent, INDENT))
+					}
+					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+				} else {
+					panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+				}
+			} else if baseKFloatVNumReg.MatchString(colAttr.att_type) { //map[(float64|float32)](int|int8|int16|int32|int64)
+				kvsm := strings.Split(att_value, ARRAY_SEPARATOR)
+				result := make(map[float64]int64)
+				outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+				var k float64
+				var v int64
+				for _, kvs := range kvsm {
+					if strings.TrimSpace(kvs) == "" {
+						continue
+					}
+					kv := strings.Split(kvs, MAP_SEPARATOR)
+					if len(kv) != 2 {
+						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+					}
+					k = strutil.Stof64(kv[0])
+					v = strutil.Stoi64(kv[1])
+					if _, pre := result[k]; pre {
+						panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+					}
+					result[k] = v
+					outputf(fmt.Sprintf(`%s["%v"]=%v,`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, v))
+				}
+				outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+			} else if baseKFloatVNumMapReg.MatchString(colAttr.att_type) { //map[(float64|float32)][](int|int8|int16|int32|int64)
+				if mapArrayValueReg.MatchString(att_value) {
+					kvsm := mapArraySonValueReg.FindAllString(att_value, -1)
+					result := make(map[float64]bool)
+					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+					var k float64
+					for _, kvs := range kvsm {
+						kv := strings.Split(kvs, MAP_SEPARATOR)
+						if len(kv) != 2 {
+							//							panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+							continue
+						}
+						k = strutil.Stof64(kv[0])
+						if ex := result[k]; ex {
+							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+						}
+						result[k] = true
+						value := strings.TrimSpace(kv[1])
+						value = value[1 : len(value)-1]
+						if v, err := strutil.ParseInt64s(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
+							panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
+						} else {
+							outputf(fmt.Sprintf(`%s["%v"]={%v},`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, strings.Join(strutil.Int64sToStrs(v), ",")))
+						}
+					}
+					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+				} else {
+					panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+				}
+			} else if baseKFloatV2NumMapReg.MatchString(colAttr.att_type) { //map[(float64|float32)][][](int|int8|int16|int32|int64)
+				if mapArraysValueReg.MatchString(att_value) {
+					kvsms := mapArraysSonValueReg.FindAllString(att_value, -1)
+					result := make(map[float64]bool)
+					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+					var k float64
+					for _, kvas := range kvsms {
+						kv := strings.Split(kvas, MAP_SEPARATOR)
+						if len(kv) != 2 {
+							//panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+							continue
+						}
+						k = strutil.Stof64(kv[0])
+						if ex := result[k]; ex {
+							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+						}
+						result[k] = true
+						arrays := arraysSonValueReg.FindAllString(kv[1], -1)
+						outputf(fmt.Sprintf(`%s["%v"]={`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k))
+						for _, value := range arrays {
+							value = strings.TrimSpace(value)
+							value = value[1 : len(value)-1]
+							if v, err := strutil.ParseInt64s(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
+								panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
+							} else {
+								outputf(fmt.Sprintf("%s{%v},", fmt.Sprintf("\n%s%s%s", colAttr.indent, INDENT, INDENT), strings.Join(strutil.Int64sToStrs(v), ",")))
+							}
+						}
+						outputf(fmt.Sprintf("\n%s%s},", colAttr.indent, INDENT))
+					}
+					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+				} else {
+					panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+				}
+			} else if baseKFloatVFloatReg.MatchString(colAttr.att_type) { //map[(float64|float32)](float64|float32)
+				kvsm := strings.Split(att_value, ARRAY_SEPARATOR)
+				result := make(map[float64]float64)
+				outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+				var k, v float64
+				for _, kvs := range kvsm {
+					if strings.TrimSpace(kvs) == "" {
+						continue
+					}
+					kv := strings.Split(kvs, MAP_SEPARATOR)
+					if len(kv) != 2 {
+						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+					}
+					k = strutil.Stof64(kv[0])
+					v = strutil.Stof64(kv[1])
+					if _, pre := result[k]; pre {
+						panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+					}
+					result[k] = v
+					outputf(fmt.Sprintf(`%s["%v"]=%v,`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, v))
+				}
+				outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+			} else if baseKFloatVFloatMapReg.MatchString(colAttr.att_type) { //map[(float64|float32)][](float64|float32)
+				if mapArrayValueReg.MatchString(att_value) {
+					kvsm := mapArraySonValueReg.FindAllString(att_value, -1)
+					result := make(map[float64]bool)
+					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+					var k float64
+					for _, kvs := range kvsm {
+						kv := strings.Split(kvs, MAP_SEPARATOR)
+						if len(kv) != 2 {
+							//							panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+							continue
+						}
+						k = strutil.Stof64(kv[0])
+						if ex := result[k]; ex {
+							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+						}
+						result[k] = true
+						value := strings.TrimSpace(kv[1])
+						value = value[1 : len(value)-1]
+						if v, err := strutil.ParseFloat64s(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
+							panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
+						} else {
+							outputf(fmt.Sprintf(`%s["%v"]={%v},`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, strings.Join(strutil.Float64sToStrs(v), ",")))
+						}
+					}
+					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+				} else {
+					panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+				}
+			} else if baseKFloatV2FloatMapReg.MatchString(colAttr.att_type) { //map[(float64|float32)][][](float64|float32)
+				if mapArraysValueReg.MatchString(att_value) {
+					kvsms := mapArraysSonValueReg.FindAllString(att_value, -1)
+					result := make(map[float64]bool)
+					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+					var k float64
+					for _, kvas := range kvsms {
+						kv := strings.Split(kvas, MAP_SEPARATOR)
+						if len(kv) != 2 {
+							//panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+							continue
+						}
+						k = strutil.Stof64(kv[0])
+						if ex := result[k]; ex {
+							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+						}
+						result[k] = true
+						arrays := arraysSonValueReg.FindAllString(kv[1], -1)
+						outputf(fmt.Sprintf(`%s["%v"]={`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k))
+						for _, value := range arrays {
+							value = strings.TrimSpace(value)
+							value = value[1 : len(value)-1]
+							if v, err := strutil.ParseFloat64s(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
+								panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
+							} else {
+								outputf(fmt.Sprintf("%s{%v},", fmt.Sprintf("\n%s%s%s", colAttr.indent, INDENT, INDENT), strings.Join(strutil.Float64sToStrs(v), ",")))
+							}
+						}
+						outputf(fmt.Sprintf("\n%s%s},", colAttr.indent, INDENT))
+					}
+					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+				} else {
+					panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+				}
+			} else if baseKFloatVBoolReg.MatchString(colAttr.att_type) { //map[(float64|float32)]string
+				kvsm := strings.Split(att_value, ARRAY_SEPARATOR)
+				result := make(map[float64]bool)
+				outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+				var k float64
+				var v bool
+				for _, kvs := range kvsm {
+					if strings.TrimSpace(kvs) == "" {
+						continue
+					}
+					kv := strings.Split(kvs, MAP_SEPARATOR)
+					if len(kv) != 2 {
+						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+					}
+					k = strutil.Stof64(kv[0])
+					v = strutil.StoBol(kv[1])
+					if _, pre := result[k]; pre {
+						panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+					}
+					result[k] = v
+					outputf(fmt.Sprintf(`%s["%v"]=%v,`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, v))
+				}
+				outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+			} else if baseKFloatVBoolMapReg.MatchString(colAttr.att_type) { //map[(float64|float32)][]bool
+				if mapArrayValueReg.MatchString(att_value) {
+					kvsm := mapArraySonValueReg.FindAllString(att_value, -1)
+					result := make(map[float64]bool)
+					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+					var k float64
+					for _, kvs := range kvsm {
+						kv := strings.Split(kvs, MAP_SEPARATOR)
+						if len(kv) != 2 {
+							//							panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+							continue
+						}
+						k = strutil.Stof64(kv[0])
+						if ex := result[k]; ex {
+							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+						}
+						result[k] = true
+						value := strings.TrimSpace(kv[1])
+						value = value[1 : len(value)-1]
+						if v, err := strutil.ParseBools(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
+							panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
+						} else {
+							outputf(fmt.Sprintf(`%s["%v"]={%v},`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, strings.Join(strutil.BoolsToStrs(v), ",")))
+						}
+					}
+					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+				} else {
+					panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+				}
+			} else if baseKFloatV2BoolMapReg.MatchString(colAttr.att_type) { //map[(float64|float32)][][]bool
+				if mapArraysValueReg.MatchString(att_value) {
+					kvsms := mapArraysSonValueReg.FindAllString(att_value, -1)
+					result := make(map[float64]bool)
+					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+					var k float64
+					for _, kvas := range kvsms {
+						kv := strings.Split(kvas, MAP_SEPARATOR)
+						if len(kv) != 2 {
+							//panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+							continue
+						}
+						k = strutil.Stof64(kv[0])
+						if ex := result[k]; ex {
+							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+						}
+						result[k] = true
+						arrays := arraysSonValueReg.FindAllString(kv[1], -1)
+						outputf(fmt.Sprintf(`%s["%v"]={`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k))
+						for _, value := range arrays {
+							value = strings.TrimSpace(value)
+							value = value[1 : len(value)-1]
+							if v, err := strutil.ParseBools(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
+								panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
+							} else {
+								outputf(fmt.Sprintf("%s{%v},", fmt.Sprintf("\n%s%s%s", colAttr.indent, INDENT, INDENT), strings.Join(strutil.BoolsToStrs(v), ",")))
+							}
+						}
+						outputf(fmt.Sprintf("\n%s%s},", colAttr.indent, INDENT))
+					}
+					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+				} else {
+					panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+				}
+			} else if baseKFloatVStrReg.MatchString(colAttr.att_type) { //map[(float64|float32)]string
+				kvsm := strings.Split(att_value, ARRAY_SEPARATOR)
+				result := make(map[float64]string)
+				outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+				var k float64
+				var v string
+				for _, kvs := range kvsm {
+					if strings.TrimSpace(kvs) == "" {
+						continue
+					}
+					kv := strings.Split(kvs, MAP_SEPARATOR)
+					if len(kv) != 2 {
+						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+					}
+					k = strutil.Stof64(kv[0])
+					v = strings.TrimSpace(kv[1])
+					if _, pre := result[k]; pre {
+						panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+					}
+					result[k] = v
+					outputf(fmt.Sprintf(`%s["%v"]=[[%v]],`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, v))
+				}
+				outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+			} else if baseKFloatVStrMapReg.MatchString(colAttr.att_type) { //map[(float64|float32)][]string
+				if mapArrayValueReg.MatchString(att_value) {
+					kvsm := mapArraySonValueReg.FindAllString(att_value, -1)
+					result := make(map[float64]bool)
+					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+					var k float64
+					for _, kvs := range kvsm {
+						kv := strings.Split(kvs, MAP_SEPARATOR)
+						if len(kv) != 2 {
+							//							panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+							continue
+						}
+						k = strutil.Stof64(kv[0])
+						if ex := result[k]; ex {
+							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+						}
+						result[k] = true
+						value := strings.TrimSpace(kv[1])
+						value = value[1 : len(value)-1]
+						outputf(fmt.Sprintf(`%s["%v"]={[[%v]]},`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, strings.Join(strings.Split(value, ARRAY_SEPARATOR), "]],[[")))
+					}
+					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+				} else {
+					panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+				}
+			} else if baseKFloatV2StrMapReg.MatchString(colAttr.att_type) { //map[(float64|float32)][][]string
+				if mapArraysValueReg.MatchString(att_value) {
+					kvsms := mapArraysSonValueReg.FindAllString(att_value, -1)
+					result := make(map[float64]bool)
+					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+					var k float64
+					for _, kvas := range kvsms {
+						kv := strings.Split(kvas, MAP_SEPARATOR)
+						if len(kv) != 2 {
+							//panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+							continue
+						}
+						k = strutil.Stof64(kv[0])
+						if ex := result[k]; ex {
+							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+						}
+						result[k] = true
+						arrays := arraysSonValueReg.FindAllString(kv[1], -1)
+						outputf(fmt.Sprintf(`%s["%v"]={`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k))
+						for _, value := range arrays {
+							value = strings.TrimSpace(value)
+							value = value[1 : len(value)-1]
+							outputf(fmt.Sprintf("%s{[[%v]]},", fmt.Sprintf("\n%s%s%s", colAttr.indent, INDENT, INDENT), strings.Join(strings.Split(value, ARRAY_SEPARATOR), "]],[[")))
+						}
+						outputf(fmt.Sprintf("\n%s%s},", colAttr.indent, INDENT))
+					}
+					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+				} else {
+					panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+				}
+			} else if baseKBoolVNumReg.MatchString(colAttr.att_type) { //map[bool](int|int8|int16|int32|int64)
+				kvsm := strings.Split(att_value, ARRAY_SEPARATOR)
+				result := make(map[bool]int64)
+				outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+				var k bool
+				var v int64
+				for _, kvs := range kvsm {
+					if strings.TrimSpace(kvs) == "" {
+						continue
+					}
+					kv := strings.Split(kvs, MAP_SEPARATOR)
+					if len(kv) != 2 {
+						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+					}
+					k = strutil.StoBol(kv[0])
+					v = strutil.Stoi64(kv[1])
+					if _, pre := result[k]; pre {
+						panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+					}
+					result[k] = v
+					outputf(fmt.Sprintf(`%s["%v"]=%v,`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, v))
+				}
+				outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+			} else if baseKBoolVNumMapReg.MatchString(colAttr.att_type) { //map[bool][](int|int8|int16|int32|int64)
+				if mapArrayValueReg.MatchString(att_value) {
+					kvsm := mapArraySonValueReg.FindAllString(att_value, -1)
+					result := make(map[bool]bool)
+					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+					var k bool
+					for _, kvs := range kvsm {
+						kv := strings.Split(kvs, MAP_SEPARATOR)
+						if len(kv) != 2 {
+							//							panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+							continue
+						}
+						k = strutil.StoBol(kv[0])
+						if _, pre := result[k]; pre {
+							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+						}
+						result[k] = true
+						value := strings.TrimSpace(kv[1])
+						value = value[1 : len(value)-1]
+						if v, err := strutil.ParseInt64s(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
+							panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
+						} else {
+							outputf(fmt.Sprintf(`%s["%v"]={%v},`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, strings.Join(strutil.Int64sToStrs(v), ",")))
+						}
+					}
+					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+				} else {
+					panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+				}
+			} else if baseKBoolV2NumMapReg.MatchString(colAttr.att_type) { //map[bool][][](int|int8|int16|int32|int64)
+				if mapArraysValueReg.MatchString(att_value) {
+					kvsms := mapArraysSonValueReg.FindAllString(att_value, -1)
+					result := make(map[bool]bool)
+					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+					var k bool
+					for _, kvas := range kvsms {
+						kv := strings.Split(kvas, MAP_SEPARATOR)
+						if len(kv) != 2 {
+							//panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+							continue
+						}
+						k = strutil.StoBol(kv[0])
+						if ex := result[k]; ex {
+							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+						}
+						result[k] = true
+						arrays := arraysSonValueReg.FindAllString(kv[1], -1)
+						outputf(fmt.Sprintf(`%s["%v"]={`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k))
+						for _, value := range arrays {
+							value = strings.TrimSpace(value)
+							value = value[1 : len(value)-1]
+							if v, err := strutil.ParseInt64s(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
+								panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
+							} else {
+								outputf(fmt.Sprintf("%s{%v},", fmt.Sprintf("\n%s%s%s", colAttr.indent, INDENT, INDENT), strings.Join(strutil.Int64sToStrs(v), ",")))
+							}
+						}
+						outputf(fmt.Sprintf("\n%s%s},", colAttr.indent, INDENT))
+					}
+					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+				} else {
+					panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+				}
+			} else if baseKBoolVFloatReg.MatchString(colAttr.att_type) { //map[bool](float64|float32)
+				kvsm := strings.Split(att_value, ARRAY_SEPARATOR)
+				result := make(map[bool]float64)
+				outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+				var k bool
+				var v float64
+				for _, kvs := range kvsm {
+					if strings.TrimSpace(kvs) == "" {
+						continue
+					}
+					kv := strings.Split(kvs, MAP_SEPARATOR)
+					if len(kv) != 2 {
+						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+					}
+					k = strutil.StoBol(kv[0])
+					v = strutil.Stof64(kv[1])
+					if _, pre := result[k]; pre {
+						panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+					}
+					result[k] = v
+					outputf(fmt.Sprintf(`%s["%v"]=%v,`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, v))
+				}
+				outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+			} else if baseKBoolVFloatMapReg.MatchString(colAttr.att_type) { //map[bool][](float64|float32)
+				if mapArrayValueReg.MatchString(att_value) {
+					kvsm := mapArraySonValueReg.FindAllString(att_value, -1)
+					result := make(map[bool]bool)
+					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+					var k bool
+					for _, kvs := range kvsm {
+						kv := strings.Split(kvs, MAP_SEPARATOR)
+						if len(kv) != 2 {
+							//							panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+							continue
+						}
+						k = strutil.StoBol(kv[0])
+						if _, pre := result[k]; pre {
+							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+						}
+						result[k] = true
+						value := strings.TrimSpace(kv[1])
+						value = value[1 : len(value)-1]
+						if v, err := strutil.ParseFloat64s(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
+							panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
+						} else {
+							outputf(fmt.Sprintf(`%s["%v"]={%v},`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, strings.Join(strutil.Float64sToStrs(v), ",")))
+						}
+					}
+					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+				} else {
+					panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+				}
+			} else if baseKBoolV2FloatMapReg.MatchString(colAttr.att_type) { //map[bool][][](float64|float32)
+				if mapArraysValueReg.MatchString(att_value) {
+					kvsms := mapArraysSonValueReg.FindAllString(att_value, -1)
+					result := make(map[bool]bool)
+					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+					var k bool
+					for _, kvas := range kvsms {
+						kv := strings.Split(kvas, MAP_SEPARATOR)
+						if len(kv) != 2 {
+							//panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+							continue
+						}
+						k = strutil.StoBol(kv[0])
+						if ex := result[k]; ex {
+							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+						}
+						result[k] = true
+						arrays := arraysSonValueReg.FindAllString(kv[1], -1)
+						outputf(fmt.Sprintf(`%s["%v"]={`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k))
+						for _, value := range arrays {
+							value = strings.TrimSpace(value)
+							value = value[1 : len(value)-1]
+							if v, err := strutil.ParseFloat64s(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
+								panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
+							} else {
+								outputf(fmt.Sprintf("%s{%v},", fmt.Sprintf("\n%s%s%s", colAttr.indent, INDENT, INDENT), strings.Join(strutil.Float64sToStrs(v), ",")))
+							}
+						}
+						outputf(fmt.Sprintf("\n%s%s},", colAttr.indent, INDENT))
+					}
+					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+				} else {
+					panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+				}
+			} else if baseKBoolVBoolReg.MatchString(colAttr.att_type) { //map[bool]bool
+				kvsm := strings.Split(att_value, ARRAY_SEPARATOR)
+				result := make(map[bool]bool)
+				outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+				var k, v bool
+				for _, kvs := range kvsm {
+					if strings.TrimSpace(kvs) == "" {
+						continue
+					}
+					kv := strings.Split(kvs, MAP_SEPARATOR)
+					if len(kv) != 2 {
+						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+					}
+					k = strutil.StoBol(kv[0])
+					v = strutil.StoBol(kv[1])
+					if _, pre := result[k]; pre {
+						panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+					}
+					result[k] = v
+					outputf(fmt.Sprintf(`%s["%v"]=%v,`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, v))
+				}
+				outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+			} else if baseKBoolVBoolMapReg.MatchString(colAttr.att_type) { //map[bool][]bool
+				if mapArrayValueReg.MatchString(att_value) {
+					kvsm := mapArraySonValueReg.FindAllString(att_value, -1)
+					result := make(map[bool]bool)
+					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+					var k bool
+					for _, kvs := range kvsm {
+						kv := strings.Split(kvs, MAP_SEPARATOR)
+						if len(kv) != 2 {
+							//							panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+							continue
+						}
+						k = strutil.StoBol(kv[0])
+						if _, pre := result[k]; pre {
+							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+						}
+						result[k] = true
+						value := strings.TrimSpace(kv[1])
+						value = value[1 : len(value)-1]
+						if v, err := strutil.ParseBools(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
+							panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
+						} else {
+							outputf(fmt.Sprintf(`%s["%v"]={%v},`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, strings.Join(strutil.BoolsToStrs(v), ",")))
+						}
+					}
+					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+				} else {
+					panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+				}
+			} else if baseKBoolV2BoolMapReg.MatchString(colAttr.att_type) { //map[bool][][]bool
+				if mapArraysValueReg.MatchString(att_value) {
+					kvsms := mapArraysSonValueReg.FindAllString(att_value, -1)
+					result := make(map[bool]bool)
+					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+					var k bool
+					for _, kvas := range kvsms {
+						kv := strings.Split(kvas, MAP_SEPARATOR)
+						if len(kv) != 2 {
+							//panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+							continue
+						}
+						k = strutil.StoBol(kv[0])
+						if ex := result[k]; ex {
+							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+						}
+						result[k] = true
+						arrays := arraysSonValueReg.FindAllString(kv[1], -1)
+						outputf(fmt.Sprintf(`%s["%v"]={`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k))
+						for _, value := range arrays {
+							value = strings.TrimSpace(value)
+							value = value[1 : len(value)-1]
+							if v, err := strutil.ParseBools(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
+								panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
+							} else {
+								outputf(fmt.Sprintf("%s{%v},", fmt.Sprintf("\n%s%s%s", colAttr.indent, INDENT, INDENT), strings.Join(strutil.BoolsToStrs(v), ",")))
+							}
+						}
+						outputf(fmt.Sprintf("\n%s%s},", colAttr.indent, INDENT))
+					}
+					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+				} else {
+					panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+				}
+			} else if baseKBoolVStrReg.MatchString(colAttr.att_type) { //map[bool]string
+				kvsm := strings.Split(att_value, ARRAY_SEPARATOR)
+				result := make(map[bool]string)
+				outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+				var k bool
+				var v string
+				for _, kvs := range kvsm {
+					if strings.TrimSpace(kvs) == "" {
+						continue
+					}
+					kv := strings.Split(kvs, MAP_SEPARATOR)
+					if len(kv) != 2 {
+						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+					}
+					k = strutil.StoBol(kv[0])
+					v = strings.TrimSpace(kv[1])
+					if _, pre := result[k]; pre {
+						panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+					}
+					result[k] = v
+					outputf(fmt.Sprintf(`%s["%v"]=[[%v]],`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, v))
+				}
+				outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+			} else if baseKBoolVStrMapReg.MatchString(colAttr.att_type) { //map[bool][]string
+				if mapArrayValueReg.MatchString(att_value) {
+					kvsm := mapArraySonValueReg.FindAllString(att_value, -1)
+					result := make(map[bool]bool)
+					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+					var k bool
+					for _, kvs := range kvsm {
+						kv := strings.Split(kvs, MAP_SEPARATOR)
+						if len(kv) != 2 {
+							//							panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+							continue
+						}
+						k = strutil.StoBol(kv[0])
+						if _, pre := result[k]; pre {
+							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+						}
+						result[k] = true
+						value := strings.TrimSpace(kv[1])
+						value = value[1 : len(value)-1]
+						outputf(fmt.Sprintf(`%s["%v"]={[[%v]]},`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, strings.Join(strings.Split(value, ARRAY_SEPARATOR), "]],[[")))
+					}
+					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+				} else {
+					panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+				}
+			} else if baseKBoolV2StrMapReg.MatchString(colAttr.att_type) { //map[bool][][]string
+				if mapArraysValueReg.MatchString(att_value) {
+					kvsms := mapArraysSonValueReg.FindAllString(att_value, -1)
+					result := make(map[bool]bool)
+					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+					var k bool
+					for _, kvas := range kvsms {
+						kv := strings.Split(kvas, MAP_SEPARATOR)
+						if len(kv) != 2 {
+							//panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+							continue
+						}
+						k = strutil.StoBol(kv[0])
+						if ex := result[k]; ex {
+							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+						}
+						result[k] = true
+						arrays := arraysSonValueReg.FindAllString(kv[1], -1)
+						outputf(fmt.Sprintf(`%s["%v"]={`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k))
+						for _, value := range arrays {
+							value = strings.TrimSpace(value)
+							value = value[1 : len(value)-1]
+							outputf(fmt.Sprintf("%s{[[%v]]},", fmt.Sprintf("\n%s%s%s", colAttr.indent, INDENT, INDENT), strings.Join(strings.Split(value, ARRAY_SEPARATOR), "]],[[")))
+						}
+						outputf(fmt.Sprintf("\n%s%s},", colAttr.indent, INDENT))
+					}
+					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+				} else {
+					panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+				}
+			} else if baseKStrVNumReg.MatchString(colAttr.att_type) { //map[string](int|int8|int16|int32|int64)
+				kvsm := strings.Split(att_value, ARRAY_SEPARATOR)
+				result := make(map[string]int64)
+				outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+				var k string
+				var v int64
+				for _, kvs := range kvsm {
+					if strings.TrimSpace(kvs) == "" {
+						continue
+					}
+					kv := strings.Split(kvs, MAP_SEPARATOR)
+					if len(kv) != 2 {
+						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+					}
+					k = strings.TrimSpace(kv[0])
+					v = strutil.Stoi64(kv[1])
+					if _, pre := result[k]; pre {
+						panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+					}
+					result[k] = v
+
+					outputf(fmt.Sprintf(`%s["%v"]=%v,`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, v))
+				}
+				outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+			} else if baseKStrVNumMapReg.MatchString(colAttr.att_type) { //map[string][](int|int8|int16|int32|int64)
+				if mapArrayValueReg.MatchString(att_value) {
+					kvsm := mapArraySonValueReg.FindAllString(att_value, -1)
+					result := make(map[string]bool)
+					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+					var k string
+					for _, kvs := range kvsm {
+						kv := strings.Split(kvs, MAP_SEPARATOR)
+						if len(kv) != 2 {
+							//							panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+							continue
+						}
+						k = strings.TrimSpace(kv[0])
+						if ex := result[k]; ex {
+							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+						}
+						result[k] = true
+						value := strings.TrimSpace(kv[1])
+						value = value[1 : len(value)-1]
+						if v, err := strutil.ParseInt64s(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
+							panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
+						} else {
+							outputf(fmt.Sprintf(`%s["%v"]={%v},`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, strings.Join(strutil.Int64sToStrs(v), ",")))
+						}
+					}
+					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+				} else {
+					panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+				}
+			} else if baseKStrV2NumMapReg.MatchString(colAttr.att_type) { //map[string][][](int|int8|int16|int32|int64)
+				if mapArraysValueReg.MatchString(att_value) {
+					kvsms := mapArraysSonValueReg.FindAllString(att_value, -1)
+					result := make(map[string]bool)
+					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+					var k string
+					for _, kvas := range kvsms {
+						kv := strings.Split(kvas, MAP_SEPARATOR)
+						if len(kv) != 2 {
+							//panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+							continue
+						}
+						k = strings.TrimSpace(kv[0])
+						if ex := result[k]; ex {
+							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+						}
+						result[k] = true
+						arrays := arraysSonValueReg.FindAllString(kv[1], -1)
+						outputf(fmt.Sprintf(`%s["%v"]={`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k))
+						for _, value := range arrays {
+							value = strings.TrimSpace(value)
+							value = value[1 : len(value)-1]
+							if v, err := strutil.ParseInt64s(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
+								panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
+							} else {
+								outputf(fmt.Sprintf("%s{%v},", fmt.Sprintf("\n%s%s%s", colAttr.indent, INDENT, INDENT), strings.Join(strutil.Int64sToStrs(v), ",")))
+							}
+						}
+						outputf(fmt.Sprintf("\n%s%s},", colAttr.indent, INDENT))
+					}
+					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+				} else {
+					panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+				}
+			} else if baseKStrVFloatReg.MatchString(colAttr.att_type) { //map[string](float32|float64)
+				kvsm := strings.Split(att_value, ARRAY_SEPARATOR)
+				result := make(map[string]float64)
+				outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+				var k string
+				var v float64
+				for _, kvs := range kvsm {
+					if strings.TrimSpace(kvs) == "" {
+						continue
+					}
+					kv := strings.Split(kvs, MAP_SEPARATOR)
+					if len(kv) != 2 {
+						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+					}
+					k = strings.TrimSpace(kv[0])
+					v = strutil.Stof64(kv[1])
+					if _, pre := result[k]; pre {
+						panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+					}
+					result[k] = v
+
+					outputf(fmt.Sprintf(`%s["%v"]=%v,`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, v))
+				}
+				outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+			} else if baseKStrVFloatMapReg.MatchString(colAttr.att_type) { //map[string][](float32|float64)
+				if mapArrayValueReg.MatchString(att_value) {
+					kvsm := mapArraySonValueReg.FindAllString(att_value, -1)
+					result := make(map[string]bool)
+					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+					var k string
+					for _, kvs := range kvsm {
+						kv := strings.Split(kvs, MAP_SEPARATOR)
+						if len(kv) != 2 {
+							//							panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+							continue
+						}
+						k = strings.TrimSpace(kv[0])
+						if ex := result[k]; ex {
+							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+						}
+						result[k] = true
+						value := strings.TrimSpace(kv[1])
+						value = value[1 : len(value)-1]
+						if v, err := strutil.ParseFloat64s(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
+							panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
+						} else {
+							outputf(fmt.Sprintf(`%s["%v"]={%v},`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, strings.Join(strutil.Float64sToStrs(v), ",")))
+						}
+					}
+					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+				} else {
+					panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+				}
+			} else if baseKStrV2FloatMapReg.MatchString(colAttr.att_type) { //map[string][][](float32|float64)
+				if mapArraysValueReg.MatchString(att_value) {
+					kvsms := mapArraysSonValueReg.FindAllString(att_value, -1)
+					result := make(map[string]bool)
+					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+					var k string
+					for _, kvas := range kvsms {
+						kv := strings.Split(kvas, MAP_SEPARATOR)
+						if len(kv) != 2 {
+							//panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+							continue
+						}
+						k = strings.TrimSpace(kv[0])
+						if ex := result[k]; ex {
+							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+						}
+						result[k] = true
+						arrays := arraysSonValueReg.FindAllString(kv[1], -1)
+						outputf(fmt.Sprintf(`%s["%v"]={`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k))
+						for _, value := range arrays {
+							value = strings.TrimSpace(value)
+							value = value[1 : len(value)-1]
+							if v, err := strutil.ParseFloat64s(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
+								panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
+							} else {
+								outputf(fmt.Sprintf("%s{%v},", fmt.Sprintf("\n%s%s%s", colAttr.indent, INDENT, INDENT), strings.Join(strutil.Float64sToStrs(v), ",")))
+							}
+						}
+						outputf(fmt.Sprintf("\n%s%s},", colAttr.indent, INDENT))
+					}
+					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+				} else {
+					panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+				}
+			} else if baseKStrVBoolReg.MatchString(colAttr.att_type) { //map[string]bool
+				kvsm := strings.Split(att_value, ARRAY_SEPARATOR)
+				result := make(map[string]bool)
+				outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+				var k string
+				var v bool
+				for _, kvs := range kvsm {
+					if strings.TrimSpace(kvs) == "" {
+						continue
+					}
+					kv := strings.Split(kvs, MAP_SEPARATOR)
+					if len(kv) != 2 {
+						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+					}
+					k = strings.TrimSpace(kv[0])
+					v = strutil.StoBol(kv[1])
+					if _, pre := result[k]; pre {
+						panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+					}
+					result[k] = v
+
+					outputf(fmt.Sprintf(`%s["%v"]=%v,`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, v))
+				}
+				outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+			} else if baseKStrVBoolMapReg.MatchString(colAttr.att_type) { //map[string][]bool
+				if mapArrayValueReg.MatchString(att_value) {
+					kvsm := mapArraySonValueReg.FindAllString(att_value, -1)
+					result := make(map[string]bool)
+					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+					var k string
+					for _, kvs := range kvsm {
+						kv := strings.Split(kvs, MAP_SEPARATOR)
+						if len(kv) != 2 {
+							//							panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+							continue
+						}
+						k = strings.TrimSpace(kv[0])
+						if ex := result[k]; ex {
+							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+						}
+						result[k] = true
+						value := strings.TrimSpace(kv[1])
+						value = value[1 : len(value)-1]
+						if v, err := strutil.ParseBools(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
+							panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
+						} else {
+							outputf(fmt.Sprintf(`%s["%v"]={%v},`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, strings.Join(strutil.BoolsToStrs(v), ",")))
+						}
+					}
+					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+				} else {
+					panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+				}
+			} else if baseKStrV2BoolMapReg.MatchString(colAttr.att_type) { //map[string][][]bool
+				if mapArraysValueReg.MatchString(att_value) {
+					kvsms := mapArraysSonValueReg.FindAllString(att_value, -1)
+					result := make(map[string]bool)
+					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+					var k string
+					for _, kvas := range kvsms {
+						kv := strings.Split(kvas, MAP_SEPARATOR)
+						if len(kv) != 2 {
+							//panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+							continue
+						}
+						k = strings.TrimSpace(kv[0])
+						if ex := result[k]; ex {
+							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+						}
+						result[k] = true
+						arrays := arraysSonValueReg.FindAllString(kv[1], -1)
+						outputf(fmt.Sprintf(`%s["%v"]={`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k))
+						for _, value := range arrays {
+							value = strings.TrimSpace(value)
+							value = value[1 : len(value)-1]
+							if v, err := strutil.ParseBools(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
+								panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
+							} else {
+								outputf(fmt.Sprintf("%s{%v},", fmt.Sprintf("\n%s%s%s", colAttr.indent, INDENT, INDENT), strings.Join(strutil.BoolsToStrs(v), ",")))
+							}
+						}
+						outputf(fmt.Sprintf("\n%s%s},", colAttr.indent, INDENT))
+					}
+					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+				} else {
+					panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+				}
+			} else if baseKStrVStrReg.MatchString(colAttr.att_type) { //map[string]string
+				kvsm := strings.Split(att_value, ARRAY_SEPARATOR)
+				result := make(map[string]string)
+				outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+				var k, v string
+				for _, kvs := range kvsm {
+					if strings.TrimSpace(kvs) == "" {
+						continue
+					}
+					kv := strings.Split(kvs, MAP_SEPARATOR)
+					if len(kv) != 2 {
+						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+					}
+					k = strings.TrimSpace(kv[0])
+					v = strings.TrimSpace(kv[1])
+					if _, pre := result[k]; pre {
+						panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+					}
+					result[k] = v
+
+					outputf(fmt.Sprintf(`%s["%v"]=[[%v]],`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, v))
+				}
+				outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+			} else if baseKStrVStrMapReg.MatchString(colAttr.att_type) { //map[string][]string
+				if mapArrayValueReg.MatchString(att_value) {
+					kvsm := mapArraySonValueReg.FindAllString(att_value, -1)
+					result := make(map[string]bool)
+					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+					var k string
+					for _, kvs := range kvsm {
+						kv := strings.Split(kvs, MAP_SEPARATOR)
+						if len(kv) != 2 {
+							//							panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+							continue
+						}
+						k = strings.TrimSpace(kv[0])
+						if ex := result[k]; ex {
+							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+						}
+						result[k] = true
+						value := strings.TrimSpace(kv[1])
+						value = value[1 : len(value)-1]
+						outputf(fmt.Sprintf(`%s["%v"]={[[%v]]},`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, strings.Join(strings.Split(value, ARRAY_SEPARATOR), "]],[[")))
+					}
+					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+				} else {
+					panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+				}
+			} else if baseKStrV2StrMapReg.MatchString(colAttr.att_type) { //map[string][][]string
+				if mapArraysValueReg.MatchString(att_value) {
+					kvsms := mapArraysSonValueReg.FindAllString(att_value, -1)
+					result := make(map[string]bool)
+					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+					var k string
+					for _, kvas := range kvsms {
+						kv := strings.Split(kvas, MAP_SEPARATOR)
+						if len(kv) != 2 {
+							//panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+							continue
+						}
+						k = strings.TrimSpace(kv[0])
+						if ex := result[k]; ex {
+							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+						}
+						result[k] = true
+						arrays := arraysSonValueReg.FindAllString(kv[1], -1)
+						outputf(fmt.Sprintf(`%s["%v"]={`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k))
+						for _, value := range arrays {
+							value = strings.TrimSpace(value)
+							value = value[1 : len(value)-1]
+							outputf(fmt.Sprintf("%s{[[%v]]},", fmt.Sprintf("\n%s%s%s", colAttr.indent, INDENT, INDENT), strings.Join(strings.Split(value, ARRAY_SEPARATOR), "]],[[")))
+						}
+						outputf(fmt.Sprintf("\n%s%s},", colAttr.indent, INDENT))
+					}
+					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+				} else {
+					panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+				}
+			} else if numKVObjMapReg.MatchString(colAttr.att_type) { //map[(int|int8|int16|int32|int64)]子对象
+				outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+				kvsm := strings.Split(att_value, ARRAY_SEPARATOR)
+				result := make(map[int64]bool)
+				var k int64
+				var v string
+				for _, kvs := range kvsm {
+					if strings.TrimSpace(kvs) == "" {
+						continue
+					}
+					kv := strings.Split(kvs, MAP_SEPARATOR)
+					if len(kv) != 2 {
+						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+					}
+					k = strutil.Stoi64(kv[0])
+					v = strings.TrimSpace(kv[1])
+					if _, pre := result[k]; pre {
+						panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+					}
+					result[k] = true
+					if colAttr.son == nil {
+						panic(fmt.Errorf("invalid field,no found son sheet,loc:%+v", colAttr))
+					}
+					son_sheetName := colAttr.son.head[MAINKEY_INDEX].sheetName
+					son_sheet_root, ok := xlsxFile.Sheet[son_sheetName]
+					if ok == false {
+						panic(fmt.Errorf("No sheet %s available.\n", son_sheetName))
+					}
+					srowIdx, srow, err := getRowIndex(son_sheet_root, son_sheetName, v, MAINKEY_INDEX)
+					if err != nil {
+						panic(fmt.Errorf("invalid field,loc:%+v,err:%v", colAttr, err))
+					}
+
+					outputf(fmt.Sprintf(`%s["%v"]={`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k))
+					generateLuaContentFromXLSXRow(srowIdx, srow, colAttr.son, outputf, xlsxFile)
+					outputf(fmt.Sprintf("\n%s%s},", colAttr.indent, INDENT))
+				}
+				outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+			} else if numKVObjArrayMapReg.MatchString(colAttr.att_type) { //map[(int|int8|int16|int32|int64)][]子对象
+				if mapArrayValueReg.MatchString(att_value) {
+					kvsm := mapArraySonValueReg.FindAllString(att_value, -1)
+					result := make(map[int64]bool)
+					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+					var k int64
+					for _, kvs := range kvsm {
+						kv := strings.Split(kvs, MAP_SEPARATOR)
+						if len(kv) != 2 {
+							//							panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+							continue
+						}
+						k = strutil.Stoi64(kv[0])
+						if ex := result[k]; ex {
+							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+						}
+						result[k] = true
+						if colAttr.son == nil {
+							panic(fmt.Errorf("invalid field,no found son sheet,loc:%+v", colAttr))
+						}
+						value := strings.TrimSpace(kv[1])
+						value = value[1 : len(value)-1]
+
+						son_sheetName := colAttr.son.head[MAINKEY_INDEX].sheetName
+						son_sheet_root, ok := xlsxFile.Sheet[son_sheetName]
+						if ok == false {
+							panic(fmt.Errorf("No sheet %s available.\n", son_sheetName))
+						}
+						vs := strings.Split(value, ARRAY_SEPARATOR)
+						outputf(fmt.Sprintf(`%s["%v"]={`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k))
+						for _, v := range vs {
+							srowIdx, srow, err := getRowIndex(son_sheet_root, son_sheetName, v, MAINKEY_INDEX)
+							if err != nil {
+								panic(fmt.Errorf("invalid field,loc:%+v,err:%v", colAttr, err))
+							}
+							outputf(fmt.Sprintf("\n%s%s%s{", colAttr.indent, INDENT, INDENT))
+							generateLuaContentFromXLSXRow(srowIdx, srow, colAttr.son, outputf, xlsxFile)
+							outputf(fmt.Sprintf("\n%s%s%s},", colAttr.indent, INDENT, INDENT))
+						}
+						outputf(fmt.Sprintf("\n%s%s},", colAttr.indent, INDENT))
+					}
+					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+				} else {
+					panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+				}
+			} else if numKVObj2ArrayMapReg.MatchString(colAttr.att_type) { //map[(int|int8|int16|int32|int64)][][]子对象
+				if mapArraysValueReg.MatchString(att_value) {
+					kvsms := mapArraysSonValueReg.FindAllString(att_value, -1)
+					result := make(map[int64]bool)
+					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+					var k int64
+					for _, kvas := range kvsms {
+						kv := strings.Split(kvas, MAP_SEPARATOR)
+						if len(kv) != 2 {
+							//panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+							continue
+						}
+						k = strutil.Stoi64(kv[0])
+						if ex := result[k]; ex {
+							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+						}
+						result[k] = true
+						if colAttr.son == nil {
+							panic(fmt.Errorf("invalid field,no found son sheet,loc:%+v", colAttr))
+						}
+						son_sheetName := colAttr.son.head[MAINKEY_INDEX].sheetName
+						son_sheet_root, ok := xlsxFile.Sheet[son_sheetName]
+						if ok == false {
+							panic(fmt.Errorf("No sheet %s available.\n", son_sheetName))
+						}
+						arrays := arraysSonValueReg.FindAllString(kv[1], -1)
+						outputf(fmt.Sprintf(`%s["%v"]={`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k))
+						for _, value := range arrays {
+							value = strings.TrimSpace(value)
+							value = value[1 : len(value)-1]
+
+							outputf(fmt.Sprintf("\n%s%s%s{", colAttr.indent, INDENT, INDENT))
+							vs := strings.Split(value, ARRAY_SEPARATOR)
+							for _, v := range vs {
+								srowIdx, srow, err := getRowIndex(son_sheet_root, son_sheetName, v, MAINKEY_INDEX)
+								if err != nil {
+									panic(fmt.Errorf("invalid field,loc:%+v,err:%v", colAttr, err))
+								}
+								outputf(fmt.Sprintf("\n%s%s%s%s{", colAttr.indent, INDENT, INDENT, INDENT))
+								generateLuaContentFromXLSXRow(srowIdx, srow, colAttr.son, outputf, xlsxFile)
+								outputf(fmt.Sprintf("\n%s%s%s%s},", colAttr.indent, INDENT, INDENT, INDENT))
+							}
+							outputf(fmt.Sprintf("\n%s%s%s},", colAttr.indent, INDENT, INDENT))
+						}
+						outputf(fmt.Sprintf("\n%s%s},", colAttr.indent, INDENT))
+					}
+					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+				} else {
+					panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+				}
+			} else if floatKVObjMapReg.MatchString(colAttr.att_type) { //map[(float64|float32)]子对象
+				outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+				kvsm := strings.Split(att_value, ARRAY_SEPARATOR)
+				result := make(map[float64]bool)
+				var k float64
+				var v string
+				for _, kvs := range kvsm {
+					if strings.TrimSpace(kvs) == "" {
+						continue
+					}
+					kv := strings.Split(kvs, MAP_SEPARATOR)
+					if len(kv) != 2 {
+						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+					}
+					k = strutil.Stof64(kv[0])
+					v = strings.TrimSpace(kv[1])
+					if _, pre := result[k]; pre {
+						panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+					}
+					result[k] = true
+					if colAttr.son == nil {
+						panic(fmt.Errorf("invalid field,no found son sheet,loc:%+v", colAttr))
+					}
+					son_sheetName := colAttr.son.head[MAINKEY_INDEX].sheetName
+					son_sheet_root, ok := xlsxFile.Sheet[son_sheetName]
+					if ok == false {
+						panic(fmt.Errorf("No sheet %s available.\n", son_sheetName))
+					}
+					srowIdx, srow, err := getRowIndex(son_sheet_root, son_sheetName, v, MAINKEY_INDEX)
+					if err != nil {
+						panic(fmt.Errorf("invalid field,loc:%+v,err:%v", colAttr, err))
+					}
+
+					outputf(fmt.Sprintf(`%s["%v"]={`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k))
+					generateLuaContentFromXLSXRow(srowIdx, srow, colAttr.son, outputf, xlsxFile)
+					outputf(fmt.Sprintf("\n%s%s},", colAttr.indent, INDENT))
+				}
+				outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+			} else if floatKVObjArrayMapReg.MatchString(colAttr.att_type) { //map[(float64|float32)][]子对象
+				if mapArrayValueReg.MatchString(att_value) {
+					kvsm := mapArraySonValueReg.FindAllString(att_value, -1)
+					result := make(map[float64]bool)
+					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+					var k float64
+					for _, kvs := range kvsm {
+						kv := strings.Split(kvs, MAP_SEPARATOR)
+						if len(kv) != 2 {
+							panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+						}
+						k = strutil.Stof64(kv[0])
+						if ex := result[k]; ex {
+							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+						}
+						result[k] = true
+						if colAttr.son == nil {
+							panic(fmt.Errorf("invalid field,no found son sheet,loc:%+v", colAttr))
+						}
+						value := strings.TrimSpace(kv[1])
+						value = value[1 : len(value)-1]
+
+						son_sheetName := colAttr.son.head[MAINKEY_INDEX].sheetName
+						son_sheet_root, ok := xlsxFile.Sheet[son_sheetName]
+						if ok == false {
+							panic(fmt.Errorf("No sheet %s available.\n", son_sheetName))
+						}
+						vs := strings.Split(value, ARRAY_SEPARATOR)
+						outputf(fmt.Sprintf(`%s["%v"]={`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k))
+						for _, v := range vs {
+							srowIdx, srow, err := getRowIndex(son_sheet_root, son_sheetName, v, MAINKEY_INDEX)
+							if err != nil {
+								panic(fmt.Errorf("invalid field,loc:%+v,err:%v", colAttr, err))
+							}
+							outputf(fmt.Sprintf("\n%s%s%s{", colAttr.indent, INDENT, INDENT))
+							generateLuaContentFromXLSXRow(srowIdx, srow, colAttr.son, outputf, xlsxFile)
+							outputf(fmt.Sprintf("\n%s%s%s},", colAttr.indent, INDENT, INDENT))
+						}
+						outputf(fmt.Sprintf("\n%s%s},", colAttr.indent, INDENT))
+					}
+					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+				} else {
+					panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+				}
+			} else if floatKVObj2ArrayMapReg.MatchString(colAttr.att_type) { //map[(float64|float32)][][]子对象
+				if mapArraysValueReg.MatchString(att_value) {
+					kvsms := mapArraysSonValueReg.FindAllString(att_value, -1)
+					result := make(map[float64]bool)
+					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+					var k float64
+					for _, kvas := range kvsms {
+						kv := strings.Split(kvas, MAP_SEPARATOR)
+						if len(kv) != 2 {
+							//panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+							continue
+						}
+						k = strutil.Stof64(kv[0])
+						if ex := result[k]; ex {
+							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+						}
+						result[k] = true
+						if colAttr.son == nil {
+							panic(fmt.Errorf("invalid field,no found son sheet,loc:%+v", colAttr))
+						}
+						son_sheetName := colAttr.son.head[MAINKEY_INDEX].sheetName
+						son_sheet_root, ok := xlsxFile.Sheet[son_sheetName]
+						if ok == false {
+							panic(fmt.Errorf("No sheet %s available.\n", son_sheetName))
+						}
+						arrays := arraysSonValueReg.FindAllString(kv[1], -1)
+						outputf(fmt.Sprintf(`%s["%v"]={`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k))
+						for _, value := range arrays {
+							value = strings.TrimSpace(value)
+							value = value[1 : len(value)-1]
+
+							outputf(fmt.Sprintf("\n%s%s%s{", colAttr.indent, INDENT, INDENT))
+							vs := strings.Split(value, ARRAY_SEPARATOR)
+							for _, v := range vs {
+								srowIdx, srow, err := getRowIndex(son_sheet_root, son_sheetName, v, MAINKEY_INDEX)
+								if err != nil {
+									panic(fmt.Errorf("invalid field,loc:%+v,err:%v", colAttr, err))
+								}
+								outputf(fmt.Sprintf("\n%s%s%s%s{", colAttr.indent, INDENT, INDENT, INDENT))
+								generateLuaContentFromXLSXRow(srowIdx, srow, colAttr.son, outputf, xlsxFile)
+								outputf(fmt.Sprintf("\n%s%s%s%s},", colAttr.indent, INDENT, INDENT, INDENT))
+							}
+							outputf(fmt.Sprintf("\n%s%s%s},", colAttr.indent, INDENT, INDENT))
+						}
+						outputf(fmt.Sprintf("\n%s%s},", colAttr.indent, INDENT))
+					}
+					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+				} else {
+					panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+				}
+			} else if boolKVObjMapReg.MatchString(colAttr.att_type) { //map[bool]子对象
+				outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+				kvsm := strings.Split(att_value, ARRAY_SEPARATOR)
+				result := make(map[bool]bool)
+				var k bool
+				var v string
+				for _, kvs := range kvsm {
+					if strings.TrimSpace(kvs) == "" {
+						continue
+					}
+					kv := strings.Split(kvs, MAP_SEPARATOR)
+					if len(kv) != 2 {
+						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+					}
+					k = strutil.StoBol(kv[0])
+					v = strings.TrimSpace(kv[1])
+					if _, pre := result[k]; pre {
+						panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+					}
+					result[k] = true
+					if colAttr.son == nil {
+						panic(fmt.Errorf("invalid field,no found son sheet,loc:%+v", colAttr))
+					}
+					son_sheetName := colAttr.son.head[MAINKEY_INDEX].sheetName
+					son_sheet_root, ok := xlsxFile.Sheet[son_sheetName]
+					if ok == false {
+						panic(fmt.Errorf("No sheet %s available.\n", son_sheetName))
+					}
+					srowIdx, srow, err := getRowIndex(son_sheet_root, son_sheetName, v, MAINKEY_INDEX)
+					if err != nil {
+						panic(fmt.Errorf("invalid field,loc:%+v,err:%v", colAttr, err))
+					}
+
+					outputf(fmt.Sprintf(`%s["%v"]={`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k))
+					generateLuaContentFromXLSXRow(srowIdx, srow, colAttr.son, outputf, xlsxFile)
+					outputf(fmt.Sprintf("\n%s%s},", colAttr.indent, INDENT))
+				}
+				outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+			} else if boolKVObjArrayMapReg.MatchString(colAttr.att_type) { //map[bool][]子对象
+				if mapArrayValueReg.MatchString(att_value) {
+					kvsm := mapArraySonValueReg.FindAllString(att_value, -1)
+					result := make(map[bool]bool)
+					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+					var k bool
+					for _, kvs := range kvsm {
+						kv := strings.Split(kvs, MAP_SEPARATOR)
+						if len(kv) != 2 {
+							//							panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+							continue
+						}
+						k = strutil.StoBol(kv[0])
+						if ex := result[k]; ex {
+							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+						}
+						result[k] = true
+						if colAttr.son == nil {
+							panic(fmt.Errorf("invalid field,no found son sheet,loc:%+v", colAttr))
+						}
+						value := strings.TrimSpace(kv[1])
+						value = value[1 : len(value)-1]
+
+						son_sheetName := colAttr.son.head[MAINKEY_INDEX].sheetName
+						son_sheet_root, ok := xlsxFile.Sheet[son_sheetName]
+						if ok == false {
+							panic(fmt.Errorf("No sheet %s available.\n", son_sheetName))
+						}
+						vs := strings.Split(value, ARRAY_SEPARATOR)
+						outputf(fmt.Sprintf(`%s["%v"]={`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k))
+						for _, v := range vs {
+							srowIdx, srow, err := getRowIndex(son_sheet_root, son_sheetName, v, MAINKEY_INDEX)
+							if err != nil {
+								panic(fmt.Errorf("invalid field,loc:%+v,err:%v", colAttr, err))
+							}
+							outputf(fmt.Sprintf("\n%s%s%s{", colAttr.indent, INDENT, INDENT))
+							generateLuaContentFromXLSXRow(srowIdx, srow, colAttr.son, outputf, xlsxFile)
+							outputf(fmt.Sprintf("\n%s%s%s},", colAttr.indent, INDENT, INDENT))
+						}
+						outputf(fmt.Sprintf("\n%s%s},", colAttr.indent, INDENT))
+					}
+					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+				} else {
+					panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+				}
+			} else if boolKVObj2ArrayMapReg.MatchString(colAttr.att_type) { //map[bool][][]子对象
+				if mapArraysValueReg.MatchString(att_value) {
+					kvsms := mapArraysSonValueReg.FindAllString(att_value, -1)
+					result := make(map[bool]bool)
+					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+					var k bool
+					for _, kvas := range kvsms {
+						kv := strings.Split(kvas, MAP_SEPARATOR)
+						if len(kv) != 2 {
+							//panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+							continue
+						}
+						k = strutil.StoBol(kv[0])
+						if ex := result[k]; ex {
+							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+						}
+						result[k] = true
+						if colAttr.son == nil {
+							panic(fmt.Errorf("invalid field,no found son sheet,loc:%+v", colAttr))
+						}
+						son_sheetName := colAttr.son.head[MAINKEY_INDEX].sheetName
+						son_sheet_root, ok := xlsxFile.Sheet[son_sheetName]
+						if ok == false {
+							panic(fmt.Errorf("No sheet %s available.\n", son_sheetName))
+						}
+						arrays := arraysSonValueReg.FindAllString(kv[1], -1)
+						outputf(fmt.Sprintf(`%s["%v"]={`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k))
+						for _, value := range arrays {
+							value = strings.TrimSpace(value)
+							value = value[1 : len(value)-1]
+
+							outputf(fmt.Sprintf("\n%s%s%s{", colAttr.indent, INDENT, INDENT))
+							vs := strings.Split(value, ARRAY_SEPARATOR)
+							for _, v := range vs {
+								srowIdx, srow, err := getRowIndex(son_sheet_root, son_sheetName, v, MAINKEY_INDEX)
+								if err != nil {
+									panic(fmt.Errorf("invalid field,loc:%+v,err:%v", colAttr, err))
+								}
+								outputf(fmt.Sprintf("\n%s%s%s%s{", colAttr.indent, INDENT, INDENT, INDENT))
+								generateLuaContentFromXLSXRow(srowIdx, srow, colAttr.son, outputf, xlsxFile)
+								outputf(fmt.Sprintf("\n%s%s%s%s},", colAttr.indent, INDENT, INDENT, INDENT))
+							}
+							outputf(fmt.Sprintf("\n%s%s%s},", colAttr.indent, INDENT, INDENT))
+						}
+						outputf(fmt.Sprintf("\n%s%s},", colAttr.indent, INDENT))
+					}
+					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+				} else {
+					panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+				}
+			} else if strKVObjMapReg.MatchString(colAttr.att_type) { //map[string]子对象
+				outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+				kvsm := strings.Split(att_value, ARRAY_SEPARATOR)
+				result := make(map[string]bool)
+				var k, v string
+				for _, kvs := range kvsm {
+					if strings.TrimSpace(kvs) == "" {
+						continue
+					}
+					kv := strings.Split(kvs, MAP_SEPARATOR)
+					if len(kv) != 2 {
+						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+					}
+					k = strings.TrimSpace(kv[0])
+					v = strings.TrimSpace(kv[1])
+					if _, pre := result[k]; pre {
+						panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+					}
+					result[k] = true
+					if colAttr.son == nil {
+						panic(fmt.Errorf("invalid field,no found son sheet,loc:%+v", colAttr))
+					}
+					son_sheetName := colAttr.son.head[MAINKEY_INDEX].sheetName
+					son_sheet_root, ok := xlsxFile.Sheet[son_sheetName]
+					if ok == false {
+						panic(fmt.Errorf("No sheet %s available.\n", son_sheetName))
+					}
+					srowIdx, srow, err := getRowIndex(son_sheet_root, son_sheetName, v, MAINKEY_INDEX)
+					if err != nil {
+						panic(fmt.Errorf("invalid field,loc:%+v,err:%v", colAttr, err))
+					}
+
+					outputf(fmt.Sprintf(`%s["%v"]={`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k))
+					generateLuaContentFromXLSXRow(srowIdx, srow, colAttr.son, outputf, xlsxFile)
+					outputf(fmt.Sprintf("\n%s%s},", colAttr.indent, INDENT))
+				}
+				outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+			} else if strKVObjArrayMapReg.MatchString(colAttr.att_type) { //map[string][]子对象
+				if mapArrayValueReg.MatchString(att_value) {
+					kvsm := mapArraySonValueReg.FindAllString(att_value, -1)
+					result := make(map[string]bool)
+					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+					var k string
+					for _, kvs := range kvsm {
+						kv := strings.Split(kvs, MAP_SEPARATOR)
+						if len(kv) != 2 {
+							//							panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+							continue
+						}
+						k = strings.TrimSpace(kv[0])
+						if ex := result[k]; ex {
+							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+						}
+						result[k] = true
+						if colAttr.son == nil {
+							panic(fmt.Errorf("invalid field,no found son sheet,loc:%+v", colAttr))
+						}
+						value := strings.TrimSpace(kv[1])
+						value = value[1 : len(value)-1]
+
+						son_sheetName := colAttr.son.head[MAINKEY_INDEX].sheetName
+						son_sheet_root, ok := xlsxFile.Sheet[son_sheetName]
+						if ok == false {
+							panic(fmt.Errorf("No sheet %s available.\n", son_sheetName))
+						}
+						vs := strings.Split(value, ARRAY_SEPARATOR)
+						outputf(fmt.Sprintf(`%s["%v"]={`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k))
+						for _, v := range vs {
+							srowIdx, srow, err := getRowIndex(son_sheet_root, son_sheetName, v, MAINKEY_INDEX)
+							if err != nil {
+								panic(fmt.Errorf("invalid field,loc:%+v,err:%v", colAttr, err))
+							}
+							outputf(fmt.Sprintf("\n%s%s%s{", colAttr.indent, INDENT, INDENT))
+							generateLuaContentFromXLSXRow(srowIdx, srow, colAttr.son, outputf, xlsxFile)
+							outputf(fmt.Sprintf("\n%s%s%s},", colAttr.indent, INDENT, INDENT))
+						}
+						outputf(fmt.Sprintf("\n%s%s},", colAttr.indent, INDENT))
+					}
+					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+				} else {
+					panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+				}
+			} else if strKVObj2ArrayMapReg.MatchString(colAttr.att_type) { //map[string][][]子对象
+				if mapArraysValueReg.MatchString(att_value) {
+					kvsms := mapArraysSonValueReg.FindAllString(att_value, -1)
+					result := make(map[string]bool)
+					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+					var k string
+					for _, kvas := range kvsms {
+						kv := strings.Split(kvas, MAP_SEPARATOR)
+						if len(kv) != 2 {
+							//panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+							continue
+						}
+						k = strings.TrimSpace(kv[0])
+						if ex := result[k]; ex {
+							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
+						}
+						result[k] = true
+						if colAttr.son == nil {
+							panic(fmt.Errorf("invalid field,no found son sheet,loc:%+v", colAttr))
+						}
+						son_sheetName := colAttr.son.head[MAINKEY_INDEX].sheetName
+						son_sheet_root, ok := xlsxFile.Sheet[son_sheetName]
+						if ok == false {
+							panic(fmt.Errorf("No sheet %s available.\n", son_sheetName))
+						}
+						arrays := arraysSonValueReg.FindAllString(kv[1], -1)
+						outputf(fmt.Sprintf(`%s["%v"]={`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k))
+						for _, value := range arrays {
+							value = strings.TrimSpace(value)
+							value = value[1 : len(value)-1]
+
+							outputf(fmt.Sprintf("\n%s%s%s{", colAttr.indent, INDENT, INDENT))
+							vs := strings.Split(value, ARRAY_SEPARATOR)
+							for _, v := range vs {
+								srowIdx, srow, err := getRowIndex(son_sheet_root, son_sheetName, v, MAINKEY_INDEX)
+								if err != nil {
+									panic(fmt.Errorf("invalid field,loc:%+v,err:%v", colAttr, err))
+								}
+								outputf(fmt.Sprintf("\n%s%s%s%s{", colAttr.indent, INDENT, INDENT, INDENT))
+								generateLuaContentFromXLSXRow(srowIdx, srow, colAttr.son, outputf, xlsxFile)
+								outputf(fmt.Sprintf("\n%s%s%s%s},", colAttr.indent, INDENT, INDENT, INDENT))
+							}
+							outputf(fmt.Sprintf("\n%s%s%s},", colAttr.indent, INDENT, INDENT))
+						}
+						outputf(fmt.Sprintf("\n%s%s},", colAttr.indent, INDENT))
+					}
+					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+				} else {
+					panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+				}
+			} else if objArrayMapReg.MatchString(colAttr.att_type) { //[]子对象
+				att_value = strings.TrimSpace(att_value)
+				if colAttr.son == nil {
+					panic(fmt.Errorf("invalid field,no found son sheet,loc:%+v", colAttr))
+				}
+				son_sheetName := colAttr.son.head[MAINKEY_INDEX].sheetName
+				son_sheet_root, ok := xlsxFile.Sheet[son_sheetName]
+				if ok == false {
+					panic(fmt.Errorf("No sheet %s available.\n", son_sheetName))
+				}
+				outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+				vs := strings.Split(att_value, ARRAY_SEPARATOR)
+				for _, v := range vs {
+					v = strings.TrimSpace(v)
+					if v == "" {
+						continue
+					}
+					srowIdx, srow, err := getRowIndex(son_sheet_root, son_sheetName, v, MAINKEY_INDEX)
+					if err != nil {
+						panic(fmt.Errorf("invalid field,loc:%+v,err:%v", colAttr, err))
+					}
+					outputf(fmt.Sprintf("\n%s%s{", colAttr.indent, INDENT))
+					generateLuaContentFromXLSXRow(srowIdx, srow, colAttr.son, outputf, xlsxFile)
+					outputf(fmt.Sprintf("\n%s%s},", colAttr.indent, INDENT))
+				}
+				outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+			} else if obj2ArrayMapReg.MatchString(colAttr.att_type) { //[][]子对象
+				if arraysValueReg.MatchString(att_value) {
+					att_values := arraysSonValueReg.FindAllString(att_value, -1)
+					son_sheetName := colAttr.son.head[MAINKEY_INDEX].sheetName
+					son_sheet_root, ok := xlsxFile.Sheet[son_sheetName]
+					if ok == false {
+						panic(fmt.Errorf("No sheet %s available.\n", son_sheetName))
+					}
+					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+					for i := 0; i < len(att_values); i++ {
+						value := strings.TrimSpace(att_values[i])
+						value = value[1 : len(value)-1]
+						vs := strings.Split(value, ARRAY_SEPARATOR)
+						outputf(fmt.Sprintf("\n%s%s{", colAttr.indent, INDENT))
+						for _, v := range vs {
+							v = strings.TrimSpace(v)
+							if v == "" {
+								continue
+							}
+							srowIdx, srow, err := getRowIndex(son_sheet_root, son_sheetName, v, MAINKEY_INDEX)
+							if err != nil {
+								panic(fmt.Errorf("invalid field,loc:%+v,err:%v", colAttr, err))
+							}
+							outputf(fmt.Sprintf("\n%s%s%s{", colAttr.indent, INDENT, INDENT))
+							generateLuaContentFromXLSXRow(srowIdx, srow, colAttr.son, outputf, xlsxFile)
+							outputf(fmt.Sprintf("\n%s%s%s},", colAttr.indent, INDENT, INDENT))
+						}
+						outputf(fmt.Sprintf("\n%s%s},", colAttr.indent, INDENT))
+					}
+					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+				} else {
+					panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
+				}
+			} else if objReg.MatchString(colAttr.att_type) { //子对象
+				outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
+				att_value = strings.TrimSpace(att_value)
+				if colAttr.son == nil {
+					panic(fmt.Errorf("invalid field,no found son sheet,loc:%+v", colAttr))
+				}
+				son_sheetName := colAttr.son.head[MAINKEY_INDEX].sheetName
+				son_sheet_root, ok := xlsxFile.Sheet[son_sheetName]
+				if ok == false {
+					panic(fmt.Errorf("No sheet %s available.\n", son_sheetName))
+				}
+				srowIdx, srow, err := getRowIndex(son_sheet_root, son_sheetName, att_value, MAINKEY_INDEX)
+				if err != nil {
+					panic(fmt.Errorf("invalid field,loc:%+v,err:%v", colAttr, err))
+				}
+				generateLuaContentFromXLSXRow(srowIdx, srow, colAttr.son, outputf, xlsxFile)
+				outputf(fmt.Sprintf("\n%s},", colAttr.indent))
+			}
+		}
+	}
 }
 
 func generateLuaContentFromXLSXFile(xlsxFile *xlsx.File, sheetName string, heads *rowhead, outputf func(s string)) {
@@ -589,1519 +2724,32 @@ func generateLuaContentFromXLSXFile(xlsxFile *xlsx.File, sheetName string, heads
 			continue
 		}
 		//主键处理
-		mk := heads.head[0]
+		mk := heads.head[MAINKEY_INDEX]
 		mk.row = rowIdx
-		mkvalue, err := row.Cells[0].String()
+		mkvalue, err := row.Cells[MAINKEY_INDEX].String()
 		if err != nil {
 			panic(fmt.Errorf("invalid main key value,loc:%+v ,err:%v", mk, err))
 		}
 		mkvalue = strings.TrimSpace(mkvalue)
-
-		if hash[mkvalue] {
-			panic(fmt.Errorf("duplicate main key's value in field: %s,loc:%+v", mkvalue, mk))
-		}
-		hash[mkvalue] = true
-		if mainKeyReg.MatchString(mkvalue) { //字符串类型
-			outputf(fmt.Sprintf(`%s%v={`, fmt.Sprintf("\n%s", mk.indent), mkvalue))
-		} else {
-			outputf(fmt.Sprintf(`%s["%v"]={`, fmt.Sprintf("\n%s", mk.indent), mkvalue))
-		}
-
-		for colIdx, cell := range row.Cells {
-			if colAttr, pre := heads.head[colIdx]; pre {
-				colAttr.row = rowIdx
-				att_value, err := cell.String()
-				if err != nil {
-					panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
-				}
-
-				if numIntReg.MatchString(colAttr.att_type) {
-					outputf(fmt.Sprintf("%sP_%s=%v,", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name, strutil.Stoi64(att_value)))
-				} else if numIntArrayReg.MatchString(colAttr.att_type) {
-					if v, err := strutil.ParseInt64s(strings.Split(att_value, ARRAY_SEPARATOR)); err != nil {
-						panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
-					} else {
-						outputf(fmt.Sprintf("%sP_%s={%v},", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name, strings.Join(strutil.Int64sToStrs(v), ",")))
-					}
-				} else if num2IntArrayReg.MatchString(colAttr.att_type) {
-					if arraysValueReg.MatchString(att_value) {
-						att_values := arraysSonValueReg.FindAllString(att_value, -1)
-						outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-						for i := 0; i < len(att_values); i++ {
-							value := strings.TrimSpace(att_values[i])
-							value = value[1 : len(value)-1]
-							if v, err := strutil.ParseInt64s(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
-								panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
-							} else {
-								outputf(fmt.Sprintf("{%v},", strings.Join(strutil.Int64sToStrs(v), ",")))
-							}
-						}
-						outputf("},")
-					} else {
-						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-					}
-				} else if numFloatReg.MatchString(colAttr.att_type) {
-					outputf(fmt.Sprintf("%sP_%s=%v,", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name, strutil.Stof64(att_value)))
-				} else if numFloatArrayReg.MatchString(colAttr.att_type) {
-					if v, err := strutil.ParseFloat64s(strings.Split(att_value, ARRAY_SEPARATOR)); err != nil {
-						panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
-					} else {
-						outputf(fmt.Sprintf("%sP_%s={%v},", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name, strings.Join(strutil.Float64sToStrs(v), ",")))
-					}
-				} else if num2FloatArrayReg.MatchString(colAttr.att_type) {
-					if arraysValueReg.MatchString(att_value) {
-						att_values := arraysSonValueReg.FindAllString(att_value, -1)
-						outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-						for i := 0; i < len(att_values); i++ {
-							value := strings.TrimSpace(att_values[i])
-							value = value[1 : len(value)-1]
-							if v, err := strutil.ParseFloat64s(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
-								panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
-							} else {
-								outputf(fmt.Sprintf("{%v},", strings.Join(strutil.Float64sToStrs(v), ",")))
-							}
-						}
-						outputf("},")
-					} else {
-						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-					}
-				} else if strReg.MatchString(colAttr.att_type) {
-					outputf(fmt.Sprintf("%sP_%s=[[%v]],", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name, att_value))
-				} else if strArrayReg.MatchString(colAttr.att_type) {
-					outputf(fmt.Sprintf("%sP_%s={[[%v]]},", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name, strings.Join(strings.Split(att_value, ARRAY_SEPARATOR), "]],[[")))
-				} else if str2ArrayReg.MatchString(colAttr.att_type) {
-					if arraysValueReg.MatchString(att_value) {
-						att_values := arraysSonValueReg.FindAllString(att_value, -1)
-						outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-						for i := 0; i < len(att_values); i++ {
-							value := strings.TrimSpace(att_values[i])
-							value = value[1 : len(value)-1]
-							outputf(fmt.Sprintf("{[[%v]]},", strings.Join(strings.Split(value, ARRAY_SEPARATOR), "]],[[")))
-						}
-						outputf("},")
-					} else {
-						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-					}
-				} else if boolReg.MatchString(colAttr.att_type) {
-					outputf(fmt.Sprintf("%sP_%s=%v,", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name, strutil.StoBol(att_value)))
-				} else if boolArrayReg.MatchString(colAttr.att_type) {
-					if v, err := strutil.ParseBools(strings.Split(att_value, ARRAY_SEPARATOR)); err != nil {
-						panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
-					} else {
-						outputf(fmt.Sprintf("%sP_%s={%v},", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name, strings.Join(strutil.BoolsToStrs(v), ",")))
-					}
-				} else if bool2ArrayReg.MatchString(colAttr.att_type) {
-					if arraysValueReg.MatchString(att_value) {
-						att_values := arraysSonValueReg.FindAllString(att_value, -1)
-						outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-						for i := 0; i < len(att_values); i++ {
-							value := strings.TrimSpace(att_values[i])
-							value = value[1 : len(value)-1]
-							if v, err := strutil.ParseBools(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
-								panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
-							} else {
-								outputf(fmt.Sprintf("{%v},", strings.Join(strutil.BoolsToStrs(v), ",")))
-							}
-						}
-						outputf("},")
-					} else {
-						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-					}
-				} else if baseKNumVNumReg.MatchString(colAttr.att_type) {
-					kvsm := strings.Split(att_value, ARRAY_SEPARATOR)
-					result := make(map[int64]int64)
-					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-					var k, v int64
-					for _, kvs := range kvsm {
-						if strings.TrimSpace(kvs) == "" {
-							continue
-						}
-						kv := strings.Split(kvs, MAP_SEPARATOR)
-						if len(kv) != 2 {
-							panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-						}
-						k = strutil.Stoi64(kv[0])
-						v = strutil.Stoi64(kv[1])
-						if _, pre := result[k]; pre {
-							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
-						}
-						result[k] = v
-						outputf(fmt.Sprintf(`%s["%v"]=%v,`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, v))
-					}
-					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
-				} else if baseKNumVNumMapReg.MatchString(colAttr.att_type) {
-					if mapArrayValueReg.MatchString(att_value) {
-						kvsm := mapArraySonValueReg.FindAllString(att_value, -1)
-						result := make(map[int64]bool)
-						outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-						var k int64
-						for _, kvs := range kvsm {
-							kv := strings.Split(kvs, MAP_SEPARATOR)
-							if len(kv) != 2 {
-								//panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-								continue
-							}
-							k = strutil.Stoi64(kv[0])
-							if ex := result[k]; ex {
-								panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
-							}
-							result[k] = true
-							value := strings.TrimSpace(kv[1])
-							value = value[1 : len(value)-1]
-							if v, err := strutil.ParseInt64s(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
-								panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
-							} else {
-								outputf(fmt.Sprintf(`%s["%v"]={%v},`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, strings.Join(strutil.Int64sToStrs(v), ",")))
-							}
-						}
-						outputf(fmt.Sprintf("\n%s},", colAttr.indent))
-					} else {
-						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-					}
-				} else if baseKNumV2NumMapReg.MatchString(colAttr.att_type) {
-					if mapArraysValueReg.MatchString(att_value) {
-						kvsms := mapArraysSonValueReg.FindAllString(att_value, -1)
-						result := make(map[int64]bool)
-						outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-						var k int64
-						for _, kvas := range kvsms {
-							kv := strings.Split(kvas, MAP_SEPARATOR)
-							if len(kv) != 2 {
-								//panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-								continue
-							}
-							k = strutil.Stoi64(kv[0])
-							if ex := result[k]; ex {
-								panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
-							}
-							result[k] = true
-							arrays := arraysSonValueReg.FindAllString(kv[1], -1)
-							outputf(fmt.Sprintf(`%s["%v"]={`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k))
-							for _, value := range arrays {
-								value = strings.TrimSpace(value)
-								value = value[1 : len(value)-1]
-								if v, err := strutil.ParseInt64s(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
-									panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
-								} else {
-									outputf(fmt.Sprintf("%s{%v},", fmt.Sprintf("\n%s%s%s", colAttr.indent, INDENT, INDENT), strings.Join(strutil.Int64sToStrs(v), ",")))
-								}
-							}
-							outputf(fmt.Sprintf("\n%s%s},", colAttr.indent, INDENT))
-						}
-						outputf(fmt.Sprintf("\n%s},", colAttr.indent))
-					} else {
-						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-					}
-				} else if baseKNumVFloatReg.MatchString(colAttr.att_type) {
-					kvsm := strings.Split(att_value, ARRAY_SEPARATOR)
-					result := make(map[int64]float64)
-					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-					var k int64
-					var v float64
-					for _, kvs := range kvsm {
-						if strings.TrimSpace(kvs) == "" {
-							continue
-						}
-						kv := strings.Split(kvs, MAP_SEPARATOR)
-						if len(kv) != 2 {
-							panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-						}
-						k = strutil.Stoi64(kv[0])
-						v = strutil.Stof64(kv[1])
-						if _, pre := result[k]; pre {
-							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
-						}
-						result[k] = v
-						outputf(fmt.Sprintf(`%s["%v"]=%v,`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, v))
-					}
-					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
-				} else if baseKNumVFloatMapReg.MatchString(colAttr.att_type) {
-					if mapArrayValueReg.MatchString(att_value) {
-						kvsm := mapArraySonValueReg.FindAllString(att_value, -1)
-						result := make(map[int64]bool)
-						outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-						var k int64
-						for _, kvs := range kvsm {
-							kv := strings.Split(kvs, MAP_SEPARATOR)
-							if len(kv) != 2 {
-								panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-							}
-							k = strutil.Stoi64(kv[0])
-							if ex := result[k]; ex {
-								panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
-							}
-							result[k] = true
-							value := strings.TrimSpace(kv[1])
-							value = value[1 : len(value)-1]
-							if v, err := strutil.ParseFloat64s(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
-								panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
-							} else {
-								outputf(fmt.Sprintf(`%s["%v"]={%v},`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, strings.Join(strutil.Float64sToStrs(v), ",")))
-							}
-						}
-						outputf(fmt.Sprintf("\n%s},", colAttr.indent))
-					} else {
-						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-					}
-				} else if baseKNumV2FloatMapReg.MatchString(colAttr.att_type) {
-					if mapArraysValueReg.MatchString(att_value) {
-						kvsms := mapArraysSonValueReg.FindAllString(att_value, -1)
-						result := make(map[int64]bool)
-						outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-						var k int64
-						for _, kvas := range kvsms {
-							kv := strings.Split(kvas, MAP_SEPARATOR)
-							if len(kv) != 2 {
-								//panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-								continue
-							}
-							k = strutil.Stoi64(kv[0])
-							if ex := result[k]; ex {
-								panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
-							}
-							result[k] = true
-							arrays := arraysSonValueReg.FindAllString(kv[1], -1)
-							outputf(fmt.Sprintf(`%s["%v"]={`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k))
-							for _, value := range arrays {
-								value = strings.TrimSpace(value)
-								value = value[1 : len(value)-1]
-								if v, err := strutil.ParseFloat64s(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
-									panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
-								} else {
-									outputf(fmt.Sprintf("%s{%v},", fmt.Sprintf("\n%s%s%s", colAttr.indent, INDENT, INDENT), strings.Join(strutil.Float64sToStrs(v), ",")))
-								}
-							}
-							outputf(fmt.Sprintf("\n%s%s},", colAttr.indent, INDENT))
-						}
-						outputf(fmt.Sprintf("\n%s},", colAttr.indent))
-					} else {
-						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-					}
-				} else if baseKNumVBoolReg.MatchString(colAttr.att_type) {
-					kvsm := strings.Split(att_value, ARRAY_SEPARATOR)
-					result := make(map[int64]bool)
-					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-					var k int64
-					var v bool
-					for _, kvs := range kvsm {
-						if strings.TrimSpace(kvs) == "" {
-							continue
-						}
-						kv := strings.Split(kvs, MAP_SEPARATOR)
-						if len(kv) != 2 {
-							panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-						}
-						k = strutil.Stoi64(kv[0])
-						v = strutil.StoBol(kv[1])
-						if _, pre := result[k]; pre {
-							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
-						}
-						result[k] = v
-						outputf(fmt.Sprintf(`%s["%v"]=%v,`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, v))
-					}
-					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
-				} else if baseKNumVBoolMapReg.MatchString(colAttr.att_type) {
-					if mapArrayValueReg.MatchString(att_value) {
-						kvsm := mapArraySonValueReg.FindAllString(att_value, -1)
-						result := make(map[int64]bool)
-						outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-						var k int64
-						for _, kvs := range kvsm {
-							kv := strings.Split(kvs, MAP_SEPARATOR)
-							if len(kv) != 2 {
-								panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-							}
-							k = strutil.Stoi64(kv[0])
-							if ex := result[k]; ex {
-								panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
-							}
-							result[k] = true
-							value := strings.TrimSpace(kv[1])
-							value = value[1 : len(value)-1]
-							if v, err := strutil.ParseBools(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
-								panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
-							} else {
-								outputf(fmt.Sprintf(`%s["%v"]={%v},`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, strings.Join(strutil.BoolsToStrs(v), ",")))
-							}
-						}
-						outputf(fmt.Sprintf("\n%s},", colAttr.indent))
-					} else {
-						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-					}
-				} else if baseKNumV2BoolMapReg.MatchString(colAttr.att_type) {
-					if mapArraysValueReg.MatchString(att_value) {
-						kvsms := mapArraysSonValueReg.FindAllString(att_value, -1)
-						result := make(map[int64]bool)
-						outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-						var k int64
-						for _, kvas := range kvsms {
-							kv := strings.Split(kvas, MAP_SEPARATOR)
-							if len(kv) != 2 {
-								//panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-								continue
-							}
-							k = strutil.Stoi64(kv[0])
-							if ex := result[k]; ex {
-								panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
-							}
-							result[k] = true
-							arrays := arraysSonValueReg.FindAllString(kv[1], -1)
-							outputf(fmt.Sprintf(`%s["%v"]={`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k))
-							for _, value := range arrays {
-								value = strings.TrimSpace(value)
-								value = value[1 : len(value)-1]
-								if v, err := strutil.ParseBools(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
-									panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
-								} else {
-									outputf(fmt.Sprintf("%s{%v},", fmt.Sprintf("\n%s%s%s", colAttr.indent, INDENT, INDENT), strings.Join(strutil.BoolsToStrs(v), ",")))
-								}
-							}
-							outputf(fmt.Sprintf("\n%s%s},", colAttr.indent, INDENT))
-						}
-						outputf(fmt.Sprintf("\n%s},", colAttr.indent))
-					} else {
-						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-					}
-				} else if baseKNumVStrReg.MatchString(colAttr.att_type) {
-					kvsm := strings.Split(att_value, ARRAY_SEPARATOR)
-					result := make(map[int64]string)
-					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-					var k int64
-					var v string
-					for _, kvs := range kvsm {
-						if strings.TrimSpace(kvs) == "" {
-							continue
-						}
-						kv := strings.Split(kvs, MAP_SEPARATOR)
-						if len(kv) != 2 {
-							panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-						}
-						k = strutil.Stoi64(kv[0])
-						v = strings.TrimSpace(kv[1])
-						if _, pre := result[k]; pre {
-							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
-						}
-						result[k] = v
-						outputf(fmt.Sprintf(`%s["%v"]=[[%v]],`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, v))
-					}
-					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
-				} else if baseKNumVStrMapReg.MatchString(colAttr.att_type) {
-					if mapArrayValueReg.MatchString(att_value) {
-						kvsm := mapArraySonValueReg.FindAllString(att_value, -1)
-						result := make(map[int64]bool)
-						outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-						var k int64
-						for _, kvs := range kvsm {
-							kv := strings.Split(kvs, MAP_SEPARATOR)
-							if len(kv) != 2 {
-								panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-							}
-							k = strutil.Stoi64(kv[0])
-							if ex := result[k]; ex {
-								panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
-							}
-							result[k] = true
-							value := strings.TrimSpace(kv[1])
-							value = value[1 : len(value)-1]
-							outputf(fmt.Sprintf(`%s["%v"]={[[%v]]},`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, strings.Join(strings.Split(value, ARRAY_SEPARATOR), "]],[[")))
-						}
-						outputf(fmt.Sprintf("\n%s},", colAttr.indent))
-					} else {
-						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-					}
-				} else if baseKNumV2StrMapReg.MatchString(colAttr.att_type) {
-					if mapArraysValueReg.MatchString(att_value) {
-						kvsms := mapArraysSonValueReg.FindAllString(att_value, -1)
-						result := make(map[int64]bool)
-						outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-						var k int64
-						for _, kvas := range kvsms {
-							kv := strings.Split(kvas, MAP_SEPARATOR)
-							if len(kv) != 2 {
-								//panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-								continue
-							}
-							k = strutil.Stoi64(kv[0])
-							if ex := result[k]; ex {
-								panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
-							}
-							result[k] = true
-							arrays := arraysSonValueReg.FindAllString(kv[1], -1)
-							outputf(fmt.Sprintf(`%s["%v"]={`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k))
-							for _, value := range arrays {
-								value = strings.TrimSpace(value)
-								value = value[1 : len(value)-1]
-								outputf(fmt.Sprintf("%s{[[%v]]},", fmt.Sprintf("\n%s%s%s", colAttr.indent, INDENT, INDENT), strings.Join(strings.Split(value, ARRAY_SEPARATOR), "]],[[")))
-							}
-							outputf(fmt.Sprintf("\n%s%s},", colAttr.indent, INDENT))
-						}
-						outputf(fmt.Sprintf("\n%s},", colAttr.indent))
-					} else {
-						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-					}
-				} else if baseKFloatVNumReg.MatchString(colAttr.att_type) {
-					kvsm := strings.Split(att_value, ARRAY_SEPARATOR)
-					result := make(map[float64]int64)
-					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-					var k float64
-					var v int64
-					for _, kvs := range kvsm {
-						if strings.TrimSpace(kvs) == "" {
-							continue
-						}
-						kv := strings.Split(kvs, MAP_SEPARATOR)
-						if len(kv) != 2 {
-							panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-						}
-						k = strutil.Stof64(kv[0])
-						v = strutil.Stoi64(kv[1])
-						if _, pre := result[k]; pre {
-							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
-						}
-						result[k] = v
-						outputf(fmt.Sprintf(`%s["%v"]=%v,`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, v))
-					}
-					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
-				} else if baseKFloatVNumMapReg.MatchString(colAttr.att_type) {
-					if mapArrayValueReg.MatchString(att_value) {
-						kvsm := mapArraySonValueReg.FindAllString(att_value, -1)
-						result := make(map[float64]bool)
-						outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-						var k float64
-						for _, kvs := range kvsm {
-							kv := strings.Split(kvs, MAP_SEPARATOR)
-							if len(kv) != 2 {
-								panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-							}
-							k = strutil.Stof64(kv[0])
-							if ex := result[k]; ex {
-								panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
-							}
-							result[k] = true
-							value := strings.TrimSpace(kv[1])
-							value = value[1 : len(value)-1]
-							if v, err := strutil.ParseInt64s(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
-								panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
-							} else {
-								outputf(fmt.Sprintf(`%s["%v"]={%v},`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, strings.Join(strutil.Int64sToStrs(v), ",")))
-							}
-						}
-						outputf(fmt.Sprintf("\n%s},", colAttr.indent))
-					} else {
-						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-					}
-				} else if baseKFloatV2NumMapReg.MatchString(colAttr.att_type) {
-					if mapArraysValueReg.MatchString(att_value) {
-						kvsms := mapArraysSonValueReg.FindAllString(att_value, -1)
-						result := make(map[float64]bool)
-						outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-						var k float64
-						for _, kvas := range kvsms {
-							kv := strings.Split(kvas, MAP_SEPARATOR)
-							if len(kv) != 2 {
-								//panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-								continue
-							}
-							k = strutil.Stof64(kv[0])
-							if ex := result[k]; ex {
-								panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
-							}
-							result[k] = true
-							arrays := arraysSonValueReg.FindAllString(kv[1], -1)
-							outputf(fmt.Sprintf(`%s["%v"]={`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k))
-							for _, value := range arrays {
-								value = strings.TrimSpace(value)
-								value = value[1 : len(value)-1]
-								if v, err := strutil.ParseInt64s(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
-									panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
-								} else {
-									outputf(fmt.Sprintf("%s{%v},", fmt.Sprintf("\n%s%s%s", colAttr.indent, INDENT, INDENT), strings.Join(strutil.Int64sToStrs(v), ",")))
-								}
-							}
-							outputf(fmt.Sprintf("\n%s%s},", colAttr.indent, INDENT))
-						}
-						outputf(fmt.Sprintf("\n%s},", colAttr.indent))
-					} else {
-						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-					}
-				} else if baseKFloatVFloatReg.MatchString(colAttr.att_type) {
-					kvsm := strings.Split(att_value, ARRAY_SEPARATOR)
-					result := make(map[float64]float64)
-					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-					var k, v float64
-					for _, kvs := range kvsm {
-						if strings.TrimSpace(kvs) == "" {
-							continue
-						}
-						kv := strings.Split(kvs, MAP_SEPARATOR)
-						if len(kv) != 2 {
-							panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-						}
-						k = strutil.Stof64(kv[0])
-						v = strutil.Stof64(kv[1])
-						if _, pre := result[k]; pre {
-							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
-						}
-						result[k] = v
-						outputf(fmt.Sprintf(`%s["%v"]=%v,`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, v))
-					}
-					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
-				} else if baseKFloatVFloatMapReg.MatchString(colAttr.att_type) {
-					if mapArrayValueReg.MatchString(att_value) {
-						kvsm := mapArraySonValueReg.FindAllString(att_value, -1)
-						result := make(map[float64]bool)
-						outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-						var k float64
-						for _, kvs := range kvsm {
-							kv := strings.Split(kvs, MAP_SEPARATOR)
-							if len(kv) != 2 {
-								panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-							}
-							k = strutil.Stof64(kv[0])
-							if ex := result[k]; ex {
-								panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
-							}
-							result[k] = true
-							value := strings.TrimSpace(kv[1])
-							value = value[1 : len(value)-1]
-							if v, err := strutil.ParseFloat64s(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
-								panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
-							} else {
-								outputf(fmt.Sprintf(`%s["%v"]={%v},`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, strings.Join(strutil.Float64sToStrs(v), ",")))
-							}
-						}
-						outputf(fmt.Sprintf("\n%s},", colAttr.indent))
-					} else {
-						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-					}
-				} else if baseKFloatV2FloatMapReg.MatchString(colAttr.att_type) {
-					if mapArraysValueReg.MatchString(att_value) {
-						kvsms := mapArraysSonValueReg.FindAllString(att_value, -1)
-						result := make(map[float64]bool)
-						outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-						var k float64
-						for _, kvas := range kvsms {
-							kv := strings.Split(kvas, MAP_SEPARATOR)
-							if len(kv) != 2 {
-								//panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-								continue
-							}
-							k = strutil.Stof64(kv[0])
-							if ex := result[k]; ex {
-								panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
-							}
-							result[k] = true
-							arrays := arraysSonValueReg.FindAllString(kv[1], -1)
-							outputf(fmt.Sprintf(`%s["%v"]={`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k))
-							for _, value := range arrays {
-								value = strings.TrimSpace(value)
-								value = value[1 : len(value)-1]
-								if v, err := strutil.ParseFloat64s(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
-									panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
-								} else {
-									outputf(fmt.Sprintf("%s{%v},", fmt.Sprintf("\n%s%s%s", colAttr.indent, INDENT, INDENT), strings.Join(strutil.Float64sToStrs(v), ",")))
-								}
-							}
-							outputf(fmt.Sprintf("\n%s%s},", colAttr.indent, INDENT))
-						}
-						outputf(fmt.Sprintf("\n%s},", colAttr.indent))
-					} else {
-						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-					}
-				} else if baseKFloatVBoolReg.MatchString(colAttr.att_type) {
-					kvsm := strings.Split(att_value, ARRAY_SEPARATOR)
-					result := make(map[float64]bool)
-					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-					var k float64
-					var v bool
-					for _, kvs := range kvsm {
-						if strings.TrimSpace(kvs) == "" {
-							continue
-						}
-						kv := strings.Split(kvs, MAP_SEPARATOR)
-						if len(kv) != 2 {
-							panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-						}
-						k = strutil.Stof64(kv[0])
-						v = strutil.StoBol(kv[1])
-						if _, pre := result[k]; pre {
-							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
-						}
-						result[k] = v
-						outputf(fmt.Sprintf(`%s["%v"]=%v,`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, v))
-					}
-					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
-				} else if baseKFloatVBoolMapReg.MatchString(colAttr.att_type) {
-					if mapArrayValueReg.MatchString(att_value) {
-						kvsm := mapArraySonValueReg.FindAllString(att_value, -1)
-						result := make(map[float64]bool)
-						outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-						var k float64
-						for _, kvs := range kvsm {
-							kv := strings.Split(kvs, MAP_SEPARATOR)
-							if len(kv) != 2 {
-								panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-							}
-							k = strutil.Stof64(kv[0])
-							if ex := result[k]; ex {
-								panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
-							}
-							result[k] = true
-							value := strings.TrimSpace(kv[1])
-							value = value[1 : len(value)-1]
-							if v, err := strutil.ParseBools(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
-								panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
-							} else {
-								outputf(fmt.Sprintf(`%s["%v"]={%v},`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, strings.Join(strutil.BoolsToStrs(v), ",")))
-							}
-						}
-						outputf(fmt.Sprintf("\n%s},", colAttr.indent))
-					} else {
-						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-					}
-				} else if baseKFloatV2BoolMapReg.MatchString(colAttr.att_type) {
-					if mapArraysValueReg.MatchString(att_value) {
-						kvsms := mapArraysSonValueReg.FindAllString(att_value, -1)
-						result := make(map[float64]bool)
-						outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-						var k float64
-						for _, kvas := range kvsms {
-							kv := strings.Split(kvas, MAP_SEPARATOR)
-							if len(kv) != 2 {
-								//panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-								continue
-							}
-							k = strutil.Stof64(kv[0])
-							if ex := result[k]; ex {
-								panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
-							}
-							result[k] = true
-							arrays := arraysSonValueReg.FindAllString(kv[1], -1)
-							outputf(fmt.Sprintf(`%s["%v"]={`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k))
-							for _, value := range arrays {
-								value = strings.TrimSpace(value)
-								value = value[1 : len(value)-1]
-								if v, err := strutil.ParseBools(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
-									panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
-								} else {
-									outputf(fmt.Sprintf("%s{%v},", fmt.Sprintf("\n%s%s%s", colAttr.indent, INDENT, INDENT), strings.Join(strutil.BoolsToStrs(v), ",")))
-								}
-							}
-							outputf(fmt.Sprintf("\n%s%s},", colAttr.indent, INDENT))
-						}
-						outputf(fmt.Sprintf("\n%s},", colAttr.indent))
-					} else {
-						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-					}
-				} else if baseKFloatVStrReg.MatchString(colAttr.att_type) {
-					kvsm := strings.Split(att_value, ARRAY_SEPARATOR)
-					result := make(map[float64]string)
-					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-					var k float64
-					var v string
-					for _, kvs := range kvsm {
-						if strings.TrimSpace(kvs) == "" {
-							continue
-						}
-						kv := strings.Split(kvs, MAP_SEPARATOR)
-						if len(kv) != 2 {
-							panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-						}
-						k = strutil.Stof64(kv[0])
-						v = strings.TrimSpace(kv[1])
-						if _, pre := result[k]; pre {
-							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
-						}
-						result[k] = v
-						outputf(fmt.Sprintf(`%s["%v"]=[[%v]],`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, v))
-					}
-					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
-				} else if baseKFloatVStrMapReg.MatchString(colAttr.att_type) {
-					if mapArrayValueReg.MatchString(att_value) {
-						kvsm := mapArraySonValueReg.FindAllString(att_value, -1)
-						result := make(map[float64]bool)
-						outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-						var k float64
-						for _, kvs := range kvsm {
-							kv := strings.Split(kvs, MAP_SEPARATOR)
-							if len(kv) != 2 {
-								panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-							}
-							k = strutil.Stof64(kv[0])
-							if ex := result[k]; ex {
-								panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
-							}
-							result[k] = true
-							value := strings.TrimSpace(kv[1])
-							value = value[1 : len(value)-1]
-							outputf(fmt.Sprintf(`%s["%v"]={[[%v]]},`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, strings.Join(strings.Split(value, ARRAY_SEPARATOR), "]],[[")))
-						}
-						outputf(fmt.Sprintf("\n%s},", colAttr.indent))
-					} else {
-						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-					}
-				} else if baseKFloatV2StrMapReg.MatchString(colAttr.att_type) {
-					if mapArraysValueReg.MatchString(att_value) {
-						kvsms := mapArraysSonValueReg.FindAllString(att_value, -1)
-						result := make(map[float64]bool)
-						outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-						var k float64
-						for _, kvas := range kvsms {
-							kv := strings.Split(kvas, MAP_SEPARATOR)
-							if len(kv) != 2 {
-								//panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-								continue
-							}
-							k = strutil.Stof64(kv[0])
-							if ex := result[k]; ex {
-								panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
-							}
-							result[k] = true
-							arrays := arraysSonValueReg.FindAllString(kv[1], -1)
-							outputf(fmt.Sprintf(`%s["%v"]={`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k))
-							for _, value := range arrays {
-								value = strings.TrimSpace(value)
-								value = value[1 : len(value)-1]
-								outputf(fmt.Sprintf("%s{[[%v]]},", fmt.Sprintf("\n%s%s%s", colAttr.indent, INDENT, INDENT), strings.Join(strings.Split(value, ARRAY_SEPARATOR), "]],[[")))
-							}
-							outputf(fmt.Sprintf("\n%s%s},", colAttr.indent, INDENT))
-						}
-						outputf(fmt.Sprintf("\n%s},", colAttr.indent))
-					} else {
-						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-					}
-				} else if baseKBoolVNumReg.MatchString(colAttr.att_type) {
-					kvsm := strings.Split(att_value, ARRAY_SEPARATOR)
-					result := make(map[bool]int64)
-					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-					var k bool
-					var v int64
-					for _, kvs := range kvsm {
-						if strings.TrimSpace(kvs) == "" {
-							continue
-						}
-						kv := strings.Split(kvs, MAP_SEPARATOR)
-						if len(kv) != 2 {
-							panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-						}
-						k = strutil.StoBol(kv[0])
-						v = strutil.Stoi64(kv[1])
-						if _, pre := result[k]; pre {
-							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
-						}
-						result[k] = v
-						outputf(fmt.Sprintf(`%s["%v"]=%v,`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, v))
-					}
-					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
-				} else if baseKBoolVNumMapReg.MatchString(colAttr.att_type) {
-					if mapArrayValueReg.MatchString(att_value) {
-						kvsm := mapArraySonValueReg.FindAllString(att_value, -1)
-						result := make(map[bool]bool)
-						outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-						var k bool
-						for _, kvs := range kvsm {
-							kv := strings.Split(kvs, MAP_SEPARATOR)
-							if len(kv) != 2 {
-								panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-							}
-							k = strutil.StoBol(kv[0])
-							if _, pre := result[k]; pre {
-								panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
-							}
-							result[k] = true
-							value := strings.TrimSpace(kv[1])
-							value = value[1 : len(value)-1]
-							if v, err := strutil.ParseInt64s(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
-								panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
-							} else {
-								outputf(fmt.Sprintf(`%s["%v"]={%v},`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, strings.Join(strutil.Int64sToStrs(v), ",")))
-							}
-						}
-						outputf(fmt.Sprintf("\n%s},", colAttr.indent))
-					} else {
-						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-					}
-				} else if baseKBoolV2NumMapReg.MatchString(colAttr.att_type) {
-					if mapArraysValueReg.MatchString(att_value) {
-						kvsms := mapArraysSonValueReg.FindAllString(att_value, -1)
-						result := make(map[bool]bool)
-						outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-						var k bool
-						for _, kvas := range kvsms {
-							kv := strings.Split(kvas, MAP_SEPARATOR)
-							if len(kv) != 2 {
-								//panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-								continue
-							}
-							k = strutil.StoBol(kv[0])
-							if ex := result[k]; ex {
-								panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
-							}
-							result[k] = true
-							arrays := arraysSonValueReg.FindAllString(kv[1], -1)
-							outputf(fmt.Sprintf(`%s["%v"]={`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k))
-							for _, value := range arrays {
-								value = strings.TrimSpace(value)
-								value = value[1 : len(value)-1]
-								if v, err := strutil.ParseInt64s(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
-									panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
-								} else {
-									outputf(fmt.Sprintf("%s{%v},", fmt.Sprintf("\n%s%s%s", colAttr.indent, INDENT, INDENT), strings.Join(strutil.Int64sToStrs(v), ",")))
-								}
-							}
-							outputf(fmt.Sprintf("\n%s%s},", colAttr.indent, INDENT))
-						}
-						outputf(fmt.Sprintf("\n%s},", colAttr.indent))
-					} else {
-						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-					}
-				} else if baseKBoolVFloatReg.MatchString(colAttr.att_type) {
-					kvsm := strings.Split(att_value, ARRAY_SEPARATOR)
-					result := make(map[bool]float64)
-					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-					var k bool
-					var v float64
-					for _, kvs := range kvsm {
-						if strings.TrimSpace(kvs) == "" {
-							continue
-						}
-						kv := strings.Split(kvs, MAP_SEPARATOR)
-						if len(kv) != 2 {
-							panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-						}
-						k = strutil.StoBol(kv[0])
-						v = strutil.Stof64(kv[1])
-						if _, pre := result[k]; pre {
-							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
-						}
-						result[k] = v
-						outputf(fmt.Sprintf(`%s["%v"]=%v,`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, v))
-					}
-					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
-				} else if baseKBoolVFloatMapReg.MatchString(colAttr.att_type) {
-					if mapArrayValueReg.MatchString(att_value) {
-						kvsm := mapArraySonValueReg.FindAllString(att_value, -1)
-						result := make(map[bool]bool)
-						outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-						var k bool
-						for _, kvs := range kvsm {
-							kv := strings.Split(kvs, MAP_SEPARATOR)
-							if len(kv) != 2 {
-								panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-							}
-							k = strutil.StoBol(kv[0])
-							if _, pre := result[k]; pre {
-								panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
-							}
-							result[k] = true
-							value := strings.TrimSpace(kv[1])
-							value = value[1 : len(value)-1]
-							if v, err := strutil.ParseFloat64s(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
-								panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
-							} else {
-								outputf(fmt.Sprintf(`%s["%v"]={%v},`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, strings.Join(strutil.Float64sToStrs(v), ",")))
-							}
-						}
-						outputf(fmt.Sprintf("\n%s},", colAttr.indent))
-					} else {
-						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-					}
-				} else if baseKBoolV2FloatMapReg.MatchString(colAttr.att_type) {
-					if mapArraysValueReg.MatchString(att_value) {
-						kvsms := mapArraysSonValueReg.FindAllString(att_value, -1)
-						result := make(map[bool]bool)
-						outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-						var k bool
-						for _, kvas := range kvsms {
-							kv := strings.Split(kvas, MAP_SEPARATOR)
-							if len(kv) != 2 {
-								//panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-								continue
-							}
-							k = strutil.StoBol(kv[0])
-							if ex := result[k]; ex {
-								panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
-							}
-							result[k] = true
-							arrays := arraysSonValueReg.FindAllString(kv[1], -1)
-							outputf(fmt.Sprintf(`%s["%v"]={`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k))
-							for _, value := range arrays {
-								value = strings.TrimSpace(value)
-								value = value[1 : len(value)-1]
-								if v, err := strutil.ParseFloat64s(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
-									panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
-								} else {
-									outputf(fmt.Sprintf("%s{%v},", fmt.Sprintf("\n%s%s%s", colAttr.indent, INDENT, INDENT), strings.Join(strutil.Float64sToStrs(v), ",")))
-								}
-							}
-							outputf(fmt.Sprintf("\n%s%s},", colAttr.indent, INDENT))
-						}
-						outputf(fmt.Sprintf("\n%s},", colAttr.indent))
-					} else {
-						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-					}
-				} else if baseKBoolVBoolReg.MatchString(colAttr.att_type) {
-					kvsm := strings.Split(att_value, ARRAY_SEPARATOR)
-					result := make(map[bool]bool)
-					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-					var k, v bool
-					for _, kvs := range kvsm {
-						if strings.TrimSpace(kvs) == "" {
-							continue
-						}
-						kv := strings.Split(kvs, MAP_SEPARATOR)
-						if len(kv) != 2 {
-							panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-						}
-						k = strutil.StoBol(kv[0])
-						v = strutil.StoBol(kv[1])
-						if _, pre := result[k]; pre {
-							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
-						}
-						result[k] = v
-						outputf(fmt.Sprintf(`%s["%v"]=%v,`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, v))
-					}
-					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
-				} else if baseKBoolVBoolMapReg.MatchString(colAttr.att_type) {
-					if mapArrayValueReg.MatchString(att_value) {
-						kvsm := mapArraySonValueReg.FindAllString(att_value, -1)
-						result := make(map[bool]bool)
-						outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-						var k bool
-						for _, kvs := range kvsm {
-							kv := strings.Split(kvs, MAP_SEPARATOR)
-							if len(kv) != 2 {
-								panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-							}
-							k = strutil.StoBol(kv[0])
-							if _, pre := result[k]; pre {
-								panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
-							}
-							result[k] = true
-							value := strings.TrimSpace(kv[1])
-							value = value[1 : len(value)-1]
-							if v, err := strutil.ParseBools(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
-								panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
-							} else {
-								outputf(fmt.Sprintf(`%s["%v"]={%v},`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, strings.Join(strutil.BoolsToStrs(v), ",")))
-							}
-						}
-						outputf(fmt.Sprintf("\n%s},", colAttr.indent))
-					} else {
-						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-					}
-				} else if baseKBoolV2BoolMapReg.MatchString(colAttr.att_type) {
-					if mapArraysValueReg.MatchString(att_value) {
-						kvsms := mapArraysSonValueReg.FindAllString(att_value, -1)
-						result := make(map[bool]bool)
-						outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-						var k bool
-						for _, kvas := range kvsms {
-							kv := strings.Split(kvas, MAP_SEPARATOR)
-							if len(kv) != 2 {
-								//panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-								continue
-							}
-							k = strutil.StoBol(kv[0])
-							if ex := result[k]; ex {
-								panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
-							}
-							result[k] = true
-							arrays := arraysSonValueReg.FindAllString(kv[1], -1)
-							outputf(fmt.Sprintf(`%s["%v"]={`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k))
-							for _, value := range arrays {
-								value = strings.TrimSpace(value)
-								value = value[1 : len(value)-1]
-								if v, err := strutil.ParseBools(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
-									panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
-								} else {
-									outputf(fmt.Sprintf("%s{%v},", fmt.Sprintf("\n%s%s%s", colAttr.indent, INDENT, INDENT), strings.Join(strutil.BoolsToStrs(v), ",")))
-								}
-							}
-							outputf(fmt.Sprintf("\n%s%s},", colAttr.indent, INDENT))
-						}
-						outputf(fmt.Sprintf("\n%s},", colAttr.indent))
-					} else {
-						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-					}
-				} else if baseKBoolVStrReg.MatchString(colAttr.att_type) {
-					kvsm := strings.Split(att_value, ARRAY_SEPARATOR)
-					result := make(map[bool]string)
-					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-					var k bool
-					var v string
-					for _, kvs := range kvsm {
-						if strings.TrimSpace(kvs) == "" {
-							continue
-						}
-						kv := strings.Split(kvs, MAP_SEPARATOR)
-						if len(kv) != 2 {
-							panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-						}
-						k = strutil.StoBol(kv[0])
-						v = strings.TrimSpace(kv[1])
-						if _, pre := result[k]; pre {
-							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
-						}
-						result[k] = v
-						outputf(fmt.Sprintf(`%s["%v"]=[[%v]],`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, v))
-					}
-					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
-				} else if baseKBoolVStrMapReg.MatchString(colAttr.att_type) {
-					if mapArrayValueReg.MatchString(att_value) {
-						kvsm := mapArraySonValueReg.FindAllString(att_value, -1)
-						result := make(map[bool]bool)
-						outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-						var k bool
-						for _, kvs := range kvsm {
-							kv := strings.Split(kvs, MAP_SEPARATOR)
-							if len(kv) != 2 {
-								panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-							}
-							k = strutil.StoBol(kv[0])
-							if _, pre := result[k]; pre {
-								panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
-							}
-							result[k] = true
-							value := strings.TrimSpace(kv[1])
-							value = value[1 : len(value)-1]
-							outputf(fmt.Sprintf(`%s["%v"]={[[%v]]},`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, strings.Join(strings.Split(value, ARRAY_SEPARATOR), "]],[[")))
-						}
-						outputf(fmt.Sprintf("\n%s},", colAttr.indent))
-					} else {
-						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-					}
-				} else if baseKBoolV2StrMapReg.MatchString(colAttr.att_type) {
-					if mapArraysValueReg.MatchString(att_value) {
-						kvsms := mapArraysSonValueReg.FindAllString(att_value, -1)
-						result := make(map[bool]bool)
-						outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-						var k bool
-						for _, kvas := range kvsms {
-							kv := strings.Split(kvas, MAP_SEPARATOR)
-							if len(kv) != 2 {
-								//panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-								continue
-							}
-							k = strutil.StoBol(kv[0])
-							if ex := result[k]; ex {
-								panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
-							}
-							result[k] = true
-							arrays := arraysSonValueReg.FindAllString(kv[1], -1)
-							outputf(fmt.Sprintf(`%s["%v"]={`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k))
-							for _, value := range arrays {
-								value = strings.TrimSpace(value)
-								value = value[1 : len(value)-1]
-								outputf(fmt.Sprintf("%s{[[%v]]},", fmt.Sprintf("\n%s%s%s", colAttr.indent, INDENT, INDENT), strings.Join(strings.Split(value, ARRAY_SEPARATOR), "]],[[")))
-							}
-							outputf(fmt.Sprintf("\n%s%s},", colAttr.indent, INDENT))
-						}
-						outputf(fmt.Sprintf("\n%s},", colAttr.indent))
-					} else {
-						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-					}
-				} else if baseKStrVNumReg.MatchString(colAttr.att_type) {
-					kvsm := strings.Split(att_value, ARRAY_SEPARATOR)
-					result := make(map[string]int64)
-					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-					var k string
-					var v int64
-					for _, kvs := range kvsm {
-						if strings.TrimSpace(kvs) == "" {
-							continue
-						}
-						kv := strings.Split(kvs, MAP_SEPARATOR)
-						if len(kv) != 2 {
-							panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-						}
-						k = strings.TrimSpace(kv[0])
-						v = strutil.Stoi64(kv[1])
-						if _, pre := result[k]; pre {
-							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
-						}
-						result[k] = v
-
-						if mainKeyReg.MatchString(k) { //字符串类型
-							outputf(fmt.Sprintf(`%s%v=%v,`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, v))
-						} else {
-							outputf(fmt.Sprintf(`%s["%v"]=%v,`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, v))
-						}
-					}
-					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
-				} else if baseKStrVNumMapReg.MatchString(colAttr.att_type) {
-					if mapArrayValueReg.MatchString(att_value) {
-						kvsm := mapArraySonValueReg.FindAllString(att_value, -1)
-						result := make(map[string]bool)
-						outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-						var k string
-						for _, kvs := range kvsm {
-							kv := strings.Split(kvs, MAP_SEPARATOR)
-							if len(kv) != 2 {
-								panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-							}
-							k = strings.TrimSpace(kv[0])
-							if ex := result[k]; ex {
-								panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
-							}
-							result[k] = true
-							value := strings.TrimSpace(kv[1])
-							value = value[1 : len(value)-1]
-							if v, err := strutil.ParseInt64s(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
-								panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
-							} else {
-								if mainKeyReg.MatchString(k) { //字符串类型
-									outputf(fmt.Sprintf(`%s%v={%v},`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, strings.Join(strutil.Int64sToStrs(v), ",")))
-								} else {
-									outputf(fmt.Sprintf(`%s["%v"]={%v},`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, strings.Join(strutil.Int64sToStrs(v), ",")))
-								}
-							}
-						}
-						outputf(fmt.Sprintf("\n%s},", colAttr.indent))
-					} else {
-						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-					}
-				} else if baseKStrV2NumMapReg.MatchString(colAttr.att_type) {
-					if mapArraysValueReg.MatchString(att_value) {
-						kvsms := mapArraysSonValueReg.FindAllString(att_value, -1)
-						result := make(map[string]bool)
-						outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-						var k string
-						for _, kvas := range kvsms {
-							kv := strings.Split(kvas, MAP_SEPARATOR)
-							if len(kv) != 2 {
-								//panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-								continue
-							}
-							k = strings.TrimSpace(kv[0])
-							if ex := result[k]; ex {
-								panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
-							}
-							result[k] = true
-							arrays := arraysSonValueReg.FindAllString(kv[1], -1)
-							if mainKeyReg.MatchString(k) { //字符串类型
-								outputf(fmt.Sprintf(`%s%v={`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k))
-							} else {
-								outputf(fmt.Sprintf(`%s["%v"]={`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k))
-							}
-							for _, value := range arrays {
-								value = strings.TrimSpace(value)
-								value = value[1 : len(value)-1]
-								if v, err := strutil.ParseInt64s(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
-									panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
-								} else {
-									outputf(fmt.Sprintf("%s{%v},", fmt.Sprintf("\n%s%s%s", colAttr.indent, INDENT, INDENT), strings.Join(strutil.Int64sToStrs(v), ",")))
-								}
-							}
-							outputf(fmt.Sprintf("\n%s%s},", colAttr.indent, INDENT))
-						}
-						outputf(fmt.Sprintf("\n%s},", colAttr.indent))
-					} else {
-						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-					}
-				} else if baseKStrVFloatReg.MatchString(colAttr.att_type) {
-					kvsm := strings.Split(att_value, ARRAY_SEPARATOR)
-					result := make(map[string]float64)
-					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-					var k string
-					var v float64
-					for _, kvs := range kvsm {
-						if strings.TrimSpace(kvs) == "" {
-							continue
-						}
-						kv := strings.Split(kvs, MAP_SEPARATOR)
-						if len(kv) != 2 {
-							panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-						}
-						k = strings.TrimSpace(kv[0])
-						v = strutil.Stof64(kv[1])
-						if _, pre := result[k]; pre {
-							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
-						}
-						result[k] = v
-
-						if mainKeyReg.MatchString(k) { //字符串类型
-							outputf(fmt.Sprintf(`%s%v=%v,`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, v))
-						} else {
-							outputf(fmt.Sprintf(`%s["%v"]=%v,`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, v))
-						}
-					}
-					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
-				} else if baseKStrVFloatMapReg.MatchString(colAttr.att_type) {
-					if mapArrayValueReg.MatchString(att_value) {
-						kvsm := mapArraySonValueReg.FindAllString(att_value, -1)
-						result := make(map[string]bool)
-						outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-						var k string
-						for _, kvs := range kvsm {
-							kv := strings.Split(kvs, MAP_SEPARATOR)
-							if len(kv) != 2 {
-								panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-							}
-							k = strings.TrimSpace(kv[0])
-							if ex := result[k]; ex {
-								panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
-							}
-							result[k] = true
-							value := strings.TrimSpace(kv[1])
-							value = value[1 : len(value)-1]
-							if v, err := strutil.ParseFloat64s(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
-								panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
-							} else {
-								if mainKeyReg.MatchString(k) { //字符串类型
-									outputf(fmt.Sprintf(`%s%v={%v},`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, strings.Join(strutil.Float64sToStrs(v), ",")))
-								} else {
-									outputf(fmt.Sprintf(`%s["%v"]={%v},`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, strings.Join(strutil.Float64sToStrs(v), ",")))
-								}
-							}
-						}
-						outputf(fmt.Sprintf("\n%s},", colAttr.indent))
-					} else {
-						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-					}
-				} else if baseKStrV2FloatMapReg.MatchString(colAttr.att_type) {
-					if mapArraysValueReg.MatchString(att_value) {
-						kvsms := mapArraysSonValueReg.FindAllString(att_value, -1)
-						result := make(map[string]bool)
-						outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-						var k string
-						for _, kvas := range kvsms {
-							kv := strings.Split(kvas, MAP_SEPARATOR)
-							if len(kv) != 2 {
-								//panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-								continue
-							}
-							k = strings.TrimSpace(kv[0])
-							if ex := result[k]; ex {
-								panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
-							}
-							result[k] = true
-							arrays := arraysSonValueReg.FindAllString(kv[1], -1)
-							if mainKeyReg.MatchString(k) { //字符串类型
-								outputf(fmt.Sprintf(`%s%v={`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k))
-							} else {
-								outputf(fmt.Sprintf(`%s["%v"]={`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k))
-							}
-							for _, value := range arrays {
-								value = strings.TrimSpace(value)
-								value = value[1 : len(value)-1]
-								if v, err := strutil.ParseFloat64s(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
-									panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
-								} else {
-									outputf(fmt.Sprintf("%s{%v},", fmt.Sprintf("\n%s%s%s", colAttr.indent, INDENT, INDENT), strings.Join(strutil.Float64sToStrs(v), ",")))
-								}
-							}
-							outputf(fmt.Sprintf("\n%s%s},", colAttr.indent, INDENT))
-						}
-						outputf(fmt.Sprintf("\n%s},", colAttr.indent))
-					} else {
-						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-					}
-				} else if baseKStrVBoolReg.MatchString(colAttr.att_type) {
-					kvsm := strings.Split(att_value, ARRAY_SEPARATOR)
-					result := make(map[string]bool)
-					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-					var k string
-					var v bool
-					for _, kvs := range kvsm {
-						if strings.TrimSpace(kvs) == "" {
-							continue
-						}
-						kv := strings.Split(kvs, MAP_SEPARATOR)
-						if len(kv) != 2 {
-							panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-						}
-						k = strings.TrimSpace(kv[0])
-						v = strutil.StoBol(kv[1])
-						if _, pre := result[k]; pre {
-							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
-						}
-						result[k] = v
-
-						if mainKeyReg.MatchString(k) { //字符串类型
-							outputf(fmt.Sprintf(`%s%v=%v,`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, v))
-						} else {
-							outputf(fmt.Sprintf(`%s["%v"]=%v,`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, v))
-						}
-					}
-					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
-				} else if baseKStrVBoolMapReg.MatchString(colAttr.att_type) {
-					if mapArrayValueReg.MatchString(att_value) {
-						kvsm := mapArraySonValueReg.FindAllString(att_value, -1)
-						result := make(map[string]bool)
-						outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-						var k string
-						for _, kvs := range kvsm {
-							kv := strings.Split(kvs, MAP_SEPARATOR)
-							if len(kv) != 2 {
-								panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-							}
-							k = strings.TrimSpace(kv[0])
-							if ex := result[k]; ex {
-								panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
-							}
-							result[k] = true
-							value := strings.TrimSpace(kv[1])
-							value = value[1 : len(value)-1]
-							if v, err := strutil.ParseBools(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
-								panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
-							} else {
-								if mainKeyReg.MatchString(k) { //字符串类型
-									outputf(fmt.Sprintf(`%s%v={%v},`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, strings.Join(strutil.BoolsToStrs(v), ",")))
-								} else {
-									outputf(fmt.Sprintf(`%s["%v"]={%v},`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, strings.Join(strutil.BoolsToStrs(v), ",")))
-								}
-							}
-						}
-						outputf(fmt.Sprintf("\n%s},", colAttr.indent))
-					} else {
-						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-					}
-				} else if baseKStrV2BoolMapReg.MatchString(colAttr.att_type) {
-					if mapArraysValueReg.MatchString(att_value) {
-						kvsms := mapArraysSonValueReg.FindAllString(att_value, -1)
-						result := make(map[string]bool)
-						outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-						var k string
-						for _, kvas := range kvsms {
-							kv := strings.Split(kvas, MAP_SEPARATOR)
-							if len(kv) != 2 {
-								//panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-								continue
-							}
-							k = strings.TrimSpace(kv[0])
-							if ex := result[k]; ex {
-								panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
-							}
-							result[k] = true
-							arrays := arraysSonValueReg.FindAllString(kv[1], -1)
-							if mainKeyReg.MatchString(k) { //字符串类型
-								outputf(fmt.Sprintf(`%s%v={`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k))
-							} else {
-								outputf(fmt.Sprintf(`%s["%v"]={`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k))
-							}
-							for _, value := range arrays {
-								value = strings.TrimSpace(value)
-								value = value[1 : len(value)-1]
-								if v, err := strutil.ParseBools(strings.Split(value, ARRAY_SEPARATOR)); err != nil {
-									panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
-								} else {
-									outputf(fmt.Sprintf("%s{%v},", fmt.Sprintf("\n%s%s%s", colAttr.indent, INDENT, INDENT), strings.Join(strutil.BoolsToStrs(v), ",")))
-								}
-							}
-							outputf(fmt.Sprintf("\n%s%s},", colAttr.indent, INDENT))
-						}
-						outputf(fmt.Sprintf("\n%s},", colAttr.indent))
-					} else {
-						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-					}
-				} else if baseKStrVStrReg.MatchString(colAttr.att_type) {
-					kvsm := strings.Split(att_value, ARRAY_SEPARATOR)
-					result := make(map[string]string)
-					outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-					var k, v string
-					for _, kvs := range kvsm {
-						if strings.TrimSpace(kvs) == "" {
-							continue
-						}
-						kv := strings.Split(kvs, MAP_SEPARATOR)
-						if len(kv) != 2 {
-							panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-						}
-						k = strings.TrimSpace(kv[0])
-						v = strings.TrimSpace(kv[1])
-						if _, pre := result[k]; pre {
-							panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
-						}
-						result[k] = v
-
-						if mainKeyReg.MatchString(k) { //字符串类型
-							outputf(fmt.Sprintf(`%s%v=[[%v]],`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, v))
-						} else {
-							outputf(fmt.Sprintf(`%s["%v"]=[[%v]],`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, v))
-						}
-					}
-					outputf(fmt.Sprintf("\n%s},", colAttr.indent))
-				} else if baseKStrVStrMapReg.MatchString(colAttr.att_type) {
-					if mapArrayValueReg.MatchString(att_value) {
-						kvsm := mapArraySonValueReg.FindAllString(att_value, -1)
-						result := make(map[string]bool)
-						outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-						var k string
-						for _, kvs := range kvsm {
-							kv := strings.Split(kvs, MAP_SEPARATOR)
-							if len(kv) != 2 {
-								panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-							}
-							k = strings.TrimSpace(kv[0])
-							if ex := result[k]; ex {
-								panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
-							}
-							result[k] = true
-							value := strings.TrimSpace(kv[1])
-							value = value[1 : len(value)-1]
-							if mainKeyReg.MatchString(k) { //字符串类型
-								outputf(fmt.Sprintf(`%s%v={[[%v]]},`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, strings.Join(strings.Split(value, ARRAY_SEPARATOR), "]],[[")))
-							} else {
-								outputf(fmt.Sprintf(`%s["%v"]={[[%v]]},`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k, strings.Join(strings.Split(value, ARRAY_SEPARATOR), "]],[[")))
-							}
-						}
-						outputf(fmt.Sprintf("\n%s},", colAttr.indent))
-					} else {
-						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-					}
-				} else if baseKStrV2StrMapReg.MatchString(colAttr.att_type) {
-					if mapArraysValueReg.MatchString(att_value) {
-						kvsms := mapArraysSonValueReg.FindAllString(att_value, -1)
-						result := make(map[string]bool)
-						outputf(fmt.Sprintf("%sP_%s={", fmt.Sprintf("\n%s", colAttr.indent), colAttr.att_name))
-						var k string
-						for _, kvas := range kvsms {
-							kv := strings.Split(kvas, MAP_SEPARATOR)
-							if len(kv) != 2 {
-								//panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-								continue
-							}
-							k = strings.TrimSpace(kv[0])
-							if ex := result[k]; ex {
-								panic(fmt.Errorf("duplicate map key's value in field,loc:%+v", colAttr))
-							}
-							result[k] = true
-							arrays := arraysSonValueReg.FindAllString(kv[1], -1)
-							if mainKeyReg.MatchString(k) { //字符串类型
-								outputf(fmt.Sprintf(`%s%v={`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k))
-							} else {
-								outputf(fmt.Sprintf(`%s["%v"]={`, fmt.Sprintf("\n%s%s", colAttr.indent, INDENT), k))
-							}
-							for _, value := range arrays {
-								value = strings.TrimSpace(value)
-								value = value[1 : len(value)-1]
-								outputf(fmt.Sprintf("%s{[[%v]]},", fmt.Sprintf("\n%s%s%s", colAttr.indent, INDENT, INDENT), strings.Join(strings.Split(value, ARRAY_SEPARATOR), "]],[[")))
-							}
-							outputf(fmt.Sprintf("\n%s%s},", colAttr.indent, INDENT))
-						}
-						outputf(fmt.Sprintf("\n%s},", colAttr.indent))
-					} else {
-						panic(fmt.Errorf("invalid type value,loc:%+v ,err:format error.", colAttr))
-					}
-				} else if objMapArrayReg.MatchString(colAttr.att_type) {
-
-				} else { //TODO Map 结构的正则表达式处理 嵌套子节点的处理
-
-				}
+		if hash != nil {
+			if hash[mkvalue] {
+				panic(fmt.Errorf("duplicate main key's value in field: %s,loc:%+v", mkvalue, mk))
 			}
+			hash[mkvalue] = true
 		}
-		outputf(fmt.Sprintf("%s},", fmt.Sprintf("\n%s", mk.indent)))
+		outputf(fmt.Sprintf(`%s["%v"]={`, fmt.Sprintf("\n%s", mk.indent), mkvalue))
+		generateLuaContentFromXLSXRow(rowIdx, row, heads, outputf, xlsxFile)
+		outputf(fmt.Sprintf("\n%s},", mk.indent))
 	}
 }
 
 func generateGoFactory(sheet_root *xlsx.Sheet, sheetName string, outputf func(s string)) {
-	keyname, err := sheet_root.Rows[2].Cells[0].String()
+	keyname, err := sheet_root.Rows[2].Cells[MAINKEY_INDEX].String()
 	if err != nil {
 		panic(err)
 	}
 	keyname = strings.TrimSpace(keyname)
-	keytype, err := sheet_root.Rows[1].Cells[0].String()
+	keytype, err := sheet_root.Rows[1].Cells[MAINKEY_INDEX].String()
 	if err != nil {
 		panic(err)
 	}
@@ -2175,7 +2823,7 @@ func generateGoFromXLSXFile(xlsxFile *xlsx.File, sheetName string, outputf func(
 			outputf(fmt.Sprintf("\tP_%s %s\n", att_name, att_type))
 		} else if baseMapReg.MatchString(att_type) {
 			outputf(fmt.Sprintf("\tP_%s %s\n", att_name, att_type))
-		} else if objMapArrayReg.MatchString(att_type) {
+		} else if objMapReg.MatchString(att_type) {
 			son_sheetName := att_type
 			base := ""
 			if idx := strings.LastIndex(att_type, "]"); idx != -1 {

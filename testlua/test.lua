@@ -73,6 +73,44 @@ test={
 				}
 			}
 		},
+		Structss={
+			{
+				{
+					aa=1,
+					bb=2,
+					cc={
+						cc=3,
+						dd=4,
+					}
+				},
+				{
+					aa=1,
+					bb=2,
+					cc={
+						cc=3,
+						dd=4,
+					}
+				}
+			},
+			{
+				{
+					aa=1,
+					bb=2,
+					cc={
+						cc=3,
+						dd=4,
+					}
+				},
+				{
+					aa=1,
+					bb=2,
+					cc={
+						cc=3,
+						dd=4,
+					}
+				}
+			}
+		},
 		Map_String_Struct={
 			aa={
 				aa=1,
