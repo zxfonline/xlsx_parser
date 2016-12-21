@@ -1,9 +1,14 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 
-	"github.com/alecthomas/repr"
+	"reflect"
+
+	//	"github.com/alecthomas/repr"
+
+	"github.com/ugorji/go/codec"
 	"github.com/yuin/gluamapper"
 	"github.com/yuin/gopher-lua"
 )
@@ -75,18 +80,18 @@ type Test struct {
 	Map_String_Structss map[string][][]Struct
 }
 type Struct struct {
-	AA int `lua:"aa"`
-	BB int `lua:"bb"`
+	AA int `lua:"aa",codec:"aa"`
+	BB int `lua:"bb",codec:"bb"`
 	CC Struct1
 }
 type Struct1 struct {
-	CC int `lua:"cc"`
-	DD int `lua:"dd"`
+	CC int `lua:"cc",codec:"cc"`
+	DD int `lua:"dd",codec:"dd"`
 }
 
 func main() {
 	L := lua.NewState()
-	test := make(map[int]Test)
+	test := new(Test)
 	mapper := gluamapper.NewMapper(gluamapper.Option{NameFunc: gluamapper.Id})
 	if err := L.DoFile("./test.lua"); err != nil {
 		panic(err)
@@ -94,5 +99,19 @@ func main() {
 	if err := mapper.Map(L.GetGlobal("test").(*lua.LTable), &test); err != nil {
 		panic(err)
 	}
-	fmt.Printf("%+v\n", repr.Repr(test, repr.Indent("\t")))
+	//	fmt.Printf("test=%+v\n", repr.Repr(test, repr.Indent(" ")))
+	var mh codec.MsgpackHandle
+	var w bytes.Buffer
+	if err := codec.NewEncoder(&w, &mh).Encode(test); err != nil {
+		panic(err)
+	}
+	//	fmt.Printf("%v\n", w.Bytes())
+	r := bytes.NewReader(w.Bytes())
+	test1 := new(Test)
+	if err := codec.NewDecoder(r, &mh).Decode(test1); err != nil {
+		panic(err)
+	}
+
+	//	fmt.Printf("test1=%+v\n", repr.Repr(test1, repr.Indent(" ")))
+	fmt.Println(reflect.DeepEqual(test1, test))
 }
