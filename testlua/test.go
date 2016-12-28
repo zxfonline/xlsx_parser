@@ -100,14 +100,15 @@ func main() {
 		panic(err)
 	}
 	//	fmt.Printf("test=%+v\n", repr.Repr(test, repr.Indent(" ")))
-	var mh codec.MsgpackHandle
+	var mh codec.JsonHandle
 	var w bytes.Buffer
 	if err := codec.NewEncoder(&w, &mh).Encode(test); err != nil {
 		panic(err)
 	}
-	//	fmt.Printf("%v\n", w.Bytes())
+	//	fmt.Printf("%v=%v\n", w.Len(), w.Bytes())
 	r := bytes.NewReader(w.Bytes())
 	test1 := new(Test)
+
 	if err := codec.NewDecoder(r, &mh).Decode(test1); err != nil {
 		panic(err)
 	}
