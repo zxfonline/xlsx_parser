@@ -99,7 +99,7 @@ func main() {
 	if err := mapper.Map(L.GetGlobal("test").(*lua.LTable), &test); err != nil {
 		panic(err)
 	}
-	//	fmt.Printf("test=%+v\n", repr.Repr(test, repr.Indent(" ")))
+	//	fmt.Printf("test=%+v\n", repr.String(test, repr.Indent(" ")))
 	var mh codec.JsonHandle
 	var w bytes.Buffer
 	if err := codec.NewEncoder(&w, &mh).Encode(test); err != nil {
@@ -113,6 +113,6 @@ func main() {
 		panic(err)
 	}
 
-	//	fmt.Printf("test1=%+v\n", repr.Repr(test1, repr.Indent(" ")))
+	//	fmt.Printf("test1=%+v\n", repr.String(test1, repr.Indent(" ")))
 	fmt.Println(reflect.DeepEqual(test1, test))
 }
