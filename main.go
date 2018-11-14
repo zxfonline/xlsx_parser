@@ -488,7 +488,7 @@ func main() {
 				printerlua(fmt.Sprintf("\nS_%s={", sheetName))
 				head := generateLuaHeadFromXLSXFile(xlsxFile, sheetName, printerlua, INDENT)
 				generateLuaContentFromXLSXFile(xlsxFile, sheetName, head, printerlua)
-				//			fmt.Printf("%+v\n", repr.Repr(head, repr.Indent("\t")))
+				//			fmt.Printf("%+v\n", repr.String(head, repr.Indent("\t")))
 				printerlua("\n}\n")
 			}
 		}(xlsxFile, sheetNames)
@@ -515,19 +515,19 @@ func generateLuaDescFromXLSXFile(xlsxFile *xlsx.File, sheetName string, outputf 
 		panic(fmt.Errorf("No sheet %s available.\n", sheetName))
 	}
 	for i, cell := range sheet_root.Rows[2].Cells {
-		att_name, err := cell.String()
+		att_name, err := cell.FormattedValue()
 		if err != nil {
 			panic(err)
 		}
 		att_name = strings.TrimSpace(att_name)
 
-		att_type, err := sheet_root.Rows[1].Cells[i].String()
+		att_type, err := sheet_root.Rows[1].Cells[i].FormattedValue()
 		if err != nil {
 			panic(err)
 		}
 		att_type = strings.TrimSpace(att_type)
 
-		att_desc, err := sheet_root.Rows[0].Cells[i].String()
+		att_desc, err := sheet_root.Rows[0].Cells[i].FormattedValue()
 		if err != nil {
 			panic(err)
 		}
@@ -572,7 +572,7 @@ func getRowIndex(sheet_root *xlsx.Sheet, sheetName, value string, col int) (int,
 		if rowIdx < 3 {
 			continue
 		}
-		mkvalue, err := row.Cells[col].String()
+		mkvalue, err := row.Cells[col].FormattedValue()
 		if err != nil {
 			return -1, nil, fmt.Errorf("get row index err:%v,sheet:%v,col:%v,value:%v", err, sheetName, col, value)
 		}
@@ -591,13 +591,13 @@ func generateLuaHeadFromXLSXFile(xlsxFile *xlsx.File, sheetName string, outputf 
 	heads := &rowhead{head: make(map[int]*rowcol)}
 
 	for i, cell := range sheet_root.Rows[2].Cells {
-		att_name, err := cell.String()
+		att_name, err := cell.FormattedValue()
 		if err != nil {
 			panic(err)
 		}
 		att_name = strings.TrimSpace(att_name)
 
-		att_type, err := sheet_root.Rows[1].Cells[i].String()
+		att_type, err := sheet_root.Rows[1].Cells[i].FormattedValue()
 		if err != nil {
 			panic(err)
 		}
@@ -665,7 +665,7 @@ func generateLuaContentFromXLSXRow(rowIdx int, row *xlsx.Row, heads *rowhead, ou
 	for colIdx, cell := range row.Cells {
 		if colAttr, pre := heads.head[colIdx]; pre {
 			colAttr.row = rowIdx
-			att_value, err := cell.String()
+			att_value, err := cell.FormattedValue()
 			if err != nil {
 				panic(fmt.Errorf("invalid type value,loc:%+v ,err:%v", colAttr, err))
 			}
@@ -2730,7 +2730,7 @@ func generateLuaContentFromXLSXFile(xlsxFile *xlsx.File, sheetName string, heads
 		//主键处理
 		mk := heads.head[MAINKEY_INDEX]
 		mk.row = rowIdx
-		mkvalue, err := row.Cells[MAINKEY_INDEX].String()
+		mkvalue, err := row.Cells[MAINKEY_INDEX].FormattedValue()
 		if err != nil {
 			panic(fmt.Errorf("invalid main key value,loc:%+v ,err:%v", mk, err))
 		}
@@ -2748,12 +2748,12 @@ func generateLuaContentFromXLSXFile(xlsxFile *xlsx.File, sheetName string, heads
 }
 
 func generateGoFactory(sheet_root *xlsx.Sheet, sheetName string, outputf func(s string)) {
-	keyname, err := sheet_root.Rows[2].Cells[MAINKEY_INDEX].String()
+	keyname, err := sheet_root.Rows[2].Cells[MAINKEY_INDEX].FormattedValue()
 	if err != nil {
 		panic(err)
 	}
 	keyname = strings.TrimSpace(keyname)
-	keytype, err := sheet_root.Rows[1].Cells[MAINKEY_INDEX].String()
+	keytype, err := sheet_root.Rows[1].Cells[MAINKEY_INDEX].FormattedValue()
 	if err != nil {
 		panic(err)
 	}
@@ -2792,7 +2792,7 @@ func generateGoFromXLSXFile(xlsxFile *xlsx.File, sheetName string, outputf func(
 	outputf(fmt.Sprintf("type S_%s struct {\n", sheetName))
 	hash := make(map[string]bool)
 	for i, cell := range sheet_root.Rows[2].Cells {
-		att_name, err := cell.String()
+		att_name, err := cell.FormattedValue()
 		if err != nil {
 			panic(err)
 		}
@@ -2802,13 +2802,13 @@ func generateGoFromXLSXFile(xlsxFile *xlsx.File, sheetName string, outputf func(
 		}
 		hash[att_name] = true
 
-		att_type, err := sheet_root.Rows[1].Cells[i].String()
+		att_type, err := sheet_root.Rows[1].Cells[i].FormattedValue()
 		if err != nil {
 			panic(err)
 		}
 		att_type = strings.TrimSpace(att_type)
 
-		att_desc, err := sheet_root.Rows[0].Cells[i].String()
+		att_desc, err := sheet_root.Rows[0].Cells[i].FormattedValue()
 		if err != nil {
 			panic(err)
 		}
