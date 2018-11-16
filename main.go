@@ -354,12 +354,12 @@ func init() {
 	if opts.OutGoPath == "" {
 		opts.OutGoPath = "./gen_config/sample"
 	} else {
-		opts.OutGoPath = path.Join(opts.OutGoPath, "sample")
+		opts.OutGoPath = filepath.Join(opts.OutGoPath, "sample")
 	}
 	if opts.OutluaPath == "" {
 		opts.OutluaPath = "./lua/sample"
 	} else {
-		opts.OutluaPath = path.Join(opts.OutluaPath, "sample")
+		opts.OutluaPath = filepath.Join(opts.OutluaPath, "sample")
 	}
 }
 
@@ -370,7 +370,7 @@ func main() {
 		defer wg.Done()
 		//构建模板工厂加载器
 		generateGoMap(func(s string) {
-			file_path := path.Join(opts.OutGoPath, "global_map.go")
+			file_path := filepath.Join(opts.OutGoPath, "global_map.go")
 			wcgo, err := openFile(file_path)
 			if err != nil {
 				panic(err)
@@ -405,7 +405,7 @@ func main() {
 			if err != nil {
 				panic(err)
 			}
-			file_path := path.Join(opts.OutGoPath, fmt.Sprintf("file_%s.go", className))
+			file_path := filepath.Join(opts.OutGoPath, fmt.Sprintf("file_%s.go", className))
 			wcgo, err := openFile(file_path)
 			if err != nil {
 				panic(err)
@@ -463,7 +463,7 @@ func main() {
 		go func(xlsxFile *xlsx.File, sheetNames []string) {
 			defer wg.Done()
 			for _, sheetName := range sheetNames {
-				file_path := path.Join(opts.OutluaPath, fmt.Sprintf("sample_%s.lua", sheetName))
+				file_path := filepath.Join(opts.OutluaPath, fmt.Sprintf("sample_%s.lua", sheetName))
 				wclua, err := openFile(file_path)
 				if err != nil {
 					panic(err)
@@ -2974,7 +2974,7 @@ type SampleFactory interface {
 }
 
 func openFile(pathfile string) (wc *os.File, err error) {
-	dir, _ := path.Split(pathfile)
+	dir, _ := filepath.Split(pathfile)
 	if _, err = os.Stat(dir); err != nil && !os.IsExist(err) {
 		if !os.IsNotExist(err) {
 			return nil, err
